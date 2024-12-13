@@ -39,10 +39,10 @@ public class MEGATrace {
     public void preInit(FMLPreInitializationEvent event) {
         try {
             Tracy.load();
+            Tracy.init();
+            Runtime.getRuntime().addShutdownHook(new Thread(Tracy::deinit));
         } catch (UnsupportedPlatformException ex) {
-            Share.log.warn("Could not load Foo natives!");
+            Share.log.warn("Could not load Tracy natives!", ex);
         }
-        Tracy.init();
-        Runtime.getRuntime().addShutdownHook(new Thread(Tracy::deinit));
     }
 }
