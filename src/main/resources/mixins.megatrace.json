@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "mega.trace.mixin.mixins",
+  "plugin": "mega.trace.mixin.plugin.MixinPlugin",
+  "refmap": "mixins.megatrace.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "client": [],
+  "server": []
+}
