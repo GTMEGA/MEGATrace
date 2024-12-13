@@ -10,8 +10,101 @@ on:
 
 jobs:
   build-and-test:
-    uses: FalsePattern/fpgradle-workflows/.github/workflows/build-and-test.yml@master
-    with:
-      timeout: 90
-      workspace: setupCIWorkspace
-      client-only: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mod repo
+        uses: actions/checkout@v4
+
+      - name: Checkout workflows repo
+        uses: actions/checkout@v4
+        with:
+          repository: FalsePattern/fpgradle-workflows
+          path: build/.fpgradle-workflows
+          fetch-depth: 0
+
+      - name: Set up JDK versions
+        uses: actions/setup-java@v4
+        with:
+          java-version: |
+            8
+            17
+            21
+          distribution: 'adopt'
+
+      - name: Validate gradle wrapper checksum
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: RFG Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/classes/java/mcLauncher
+            build/classes/java/patchedMc
+            build/extra-mappings
+            build/lombok/effective-config/lombok-mcLauncher.config
+            build/lombok/effective-config/lombok-patchedMc.config
+            build/resources/patchedMc
+            build/rfg
+            build/tmp/.cache/expanded
+            build/tmp/compileMcLauncherJava
+            build/tmp/compilePatchedMcJava
+            build/tmp/deobfuscateMergedJarToSrg
+            build/tmp/packageMcLauncher
+            build/tmp/packagePatchedMc
+          key: rfg-cache
+
+      - name: Zig Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .zig-cache
+          key: zig-cache
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Setup the workspace
+        run: ./gradlew --build-cache setupCIWorkspace
+
+      - name: Compile the mod
+        run: ./gradlew --build-cache assemble
+
+      - name: Attach compilation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.repository_id }}-build-libs
+          path: build/libs/
+          retention-days: 31
+
+      - name: Run post-build checks
+        id: build_mod
+        run: ./gradlew --build-cache build
+
+      - name: Attach gradle reports
+        if: failure() && steps.build_mod.conclusion == 'failure'
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: ${{ github.repository_id }}-reports
+          path: build/reports/
+          retention-days: 31
+
+      - name: Run server for 90 seconds
+        run: |
+          mkdir -p run
+          echo "eula=true" > run/eula.txt
+          # Set a constant seed with a village at spawn
+          echo "level-seed=-6202107849386030209\nonline-mode=true\n" > run/server.properties
+          echo "stop" > run/stop.txt
+          timeout 90 ./gradlew --build-cache runServer 2>&1 < run/stop.txt | tee -a server.log || true
+
+      - name: Test no errors reported during server run
+        run: |
+          chmod +x build/.fpgradle-workflows/.github/scripts/test_no_error_reports
+          build/.fpgradle-workflows/.github/scripts/test_no_error_reports
+
+      - name: Stop gradle
+        run: ./gradlew --stop
