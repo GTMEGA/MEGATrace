@@ -7,8 +7,8 @@
             .hash = "122046eec9fc7324cb612111c09ce224ddee53a6931bbfa584ebce6e223a62f2cd05",
         },
         .@"zig-tracy" = .{
-            .url = "https://github.com/FalsePattern/zig-tracy/archive/f633a85d9838886537fbd1be1f6a67ea66effc32.tar.gz",
-            .hash = "1220e948a5d686ee74b364de038d4eff2a948186c23e0926310b8361fe2108379d77",
+            .url = "https://github.com/FalsePattern/zig-tracy/archive/5d61a488d4fd0d4daeaaf25ec049dd564a796c78.tar.gz",
+            .hash = "1220837a92f80d400b8c27f25b3238feccb6da74c29d9430535474289d9412022e69",
         },
     },
     .paths = .{
