@@ -23,6 +23,8 @@
 package mega.trace.mixin.mixins.client;
 
 import mega.trace.IProfiler;
+import mega.trace.client.GLAsyncTasks;
+import mega.trace.client.ScreenshotHandler;
 import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -58,6 +60,8 @@ public abstract class MinecraftMixin {
             at = @At("HEAD"),
             require = 1)
     private void frame(CallbackInfo ci) {
+        GLAsyncTasks.nextFrame();
+        ScreenshotHandler.queueScreenshot();
         Tracy.frameMark();
     }
 
