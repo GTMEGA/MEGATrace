@@ -22,6 +22,7 @@ const std = @import("std");
 const jni = @import("jni");
 const config = @import("config");
 const tracy = @import("tracy");
+const GPU = tracy.GPU;
 var tracingAlloc: tracy.TracingAllocator = undefined;
 var arenaAlloc: std.heap.ArenaAllocator = undefined;
 var alloc: std.mem.Allocator = undefined;
@@ -126,6 +127,70 @@ inline fn deinitZone(i: jni.jlong) void {
     const zone: tracy.ZoneContext = (zone_registry.fetchRemove(i) orelse return).value;
     zone.deinit();
 }
+
+pub fn jni_gpu_allocSrcLoc(cEnv: *jni.cEnv, _: jni.jclass, jFile: jni.jbyteArray, jFunction: jni.jbyteArray, line: jni.jint, jName: jni.jbyteArray, color: jni.jint) callconv(.c) jni.jlong {
+    const env = jni.JNIEnv.warp(cEnv);
+    const function = getByteArray(env, jFunction);
+    defer freeByteArray(env, jFunction, function);
+    if (function == null)
+        return 0;
+    const file = getByteArray(env, jFile);
+    defer freeByteArray(env, jFile, file);
+    if (file == null)
+        return 0;
+    const name = getByteArray(env, jName);
+    defer freeByteArray(env, jName, name);
+    return @bitCast(tracy.allocSrcLoc(@bitCast(line), file.?, function.?, name, @bitCast(color)));
+}
+
+pub fn jni_gpu_beginZone(_: *jni.cEnv, _: jni.jclass, srcLoc: jni.jlong, queryId: jni.jshort, context: jni.jbyte) callconv(.c) void {
+    GPU.beginZone(@bitCast(srcLoc), @bitCast(queryId), @bitCast(context));
+}
+
+pub fn critical_gpu_beginZone(srcLoc: jni.jlong, queryId: jni.jshort, context: jni.jbyte) void {
+    GPU.beginZone(@bitCast(srcLoc), @bitCast(queryId), @bitCast(context));
+}
+
+pub fn jni_gpu_endZone(_: *jni.cEnv, _: jni.jclass, queryId: jni.jshort, context: jni.jbyte) callconv(.c) void {
+    GPU.endZone(@bitCast(queryId), @bitCast(context));
+}
+
+pub fn critical_gpu_endZone(queryId: jni.jshort, context: jni.jbyte) void {
+    GPU.endZone(@bitCast(queryId), @bitCast(context));
+}
+
+pub fn jni_gpu_time(_: *jni.cEnv, _: jni.jclass, gpuTime: jni.jlong, queryId: jni.jshort, context: jni.jbyte) callconv(.c) void {
+    GPU.time(@bitCast(gpuTime), @bitCast(queryId), @bitCast(context));
+}
+
+pub fn critical_gpu_time(gpuTime: jni.jlong, queryId: jni.jshort, context: jni.jbyte) void {
+    GPU.time(@bitCast(gpuTime), @bitCast(queryId), @bitCast(context));
+}
+
+pub fn jni_gpu_newContext(_: *jni.cEnv, _: jni.jclass, gpuTime: jni.jlong, period: jni.jfloat, context: jni.jbyte) callconv(.c) void {
+    GPU.newContext(@bitCast(gpuTime), period, @bitCast(context), &.{}, GPU.ContextType.OpenGl);
+}
+
+pub fn critical_gpu_newContext(gpuTime: jni.jlong, period: jni.jfloat, context: jni.jbyte) void {
+    GPU.newContext(@bitCast(gpuTime), period, @bitCast(context), &.{}, GPU.ContextType.OpenGl);
+}
+
+pub fn jni_gpu_calibration(_: *jni.cEnv, _: jni.jclass, gpuTime: jni.jlong, cpuDelta: jni.jlong, context: jni.jbyte) callconv(.c) void {
+    GPU.calibration(@bitCast(gpuTime), @bitCast(cpuDelta), @bitCast(context));
+}
+
+pub fn critical_gpu_calibration(gpuTime: jni.jlong, cpuDelta: jni.jlong, context: jni.jbyte) void {
+    GPU.calibration(@bitCast(gpuTime), @bitCast(cpuDelta), @bitCast(context));
+}
+
+pub fn jni_gpu_timeSync(_: *jni.cEnv, _: jni.jclass, gpuTime: jni.jlong, context: jni.jbyte) callconv(.c) void {
+    GPU.timeSync(@bitCast(gpuTime), @bitCast(context));
+}
+
+pub fn critical_gpu_timeSync(gpuTime: jni.jlong, context: jni.jbyte) void {
+    GPU.timeSync(@bitCast(gpuTime), @bitCast(context));
+}
+
 
 // Utils
 

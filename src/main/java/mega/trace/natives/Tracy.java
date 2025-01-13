@@ -22,6 +22,8 @@
 
 package mega.trace.natives;
 
+import org.jetbrains.annotations.Nullable;
+
 public class Tracy {
     public static void load() throws UnsupportedPlatformException {
         new NativeLoader().loadNative(Tracy.class, "Tracy");
@@ -33,4 +35,12 @@ public class Tracy {
     public static native void deinitZone(long zone);
     public static native void markServerThread();
     public static native void markClientThread();
+
+    public static native long gpu_allocSrcLoc(byte[] file, byte[] function, int line, byte @Nullable [] name, int color);
+    public static native void gpu_beginZone(long srcLoc, short queryId, byte context);
+    public static native void gpu_endZone(short queryId, byte context);
+    public static native void gpu_time(long gpuTime, short queryId, byte context);
+    public static native void gpu_newContext(long gpuTime, float period, byte context);
+    public static native void gpu_calibration(long gpuTime, long cpuDelta, byte context);
+    public static native void gpu_timeSync(long gpuTime, byte context);
 }
