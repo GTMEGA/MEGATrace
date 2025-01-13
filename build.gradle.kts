@@ -43,7 +43,7 @@ dependencies {
 val zigOutDir = layout.buildDirectory.dir("zig")
 
 zig {
-    zigVersion = "0.14.0-dev.2435+7575f2121"
+    zigVersion = "0.14.0-dev.2639+15fe99957"
     outputDir = zigOutDir
     targets {
         create("x86_64-linux-gnu")
