@@ -77,6 +77,8 @@ public class MixinPlugin implements IMixinPlugin {
                 }
             });
             tracyInitThread.setName("Tracy Init");
+
+            //TODO: Starting threading during class loading doesn't work so good, put in regular constructor
             tracyInitThread.start();
             tracyInitThread.join(5_000);
 

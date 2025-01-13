@@ -50,7 +50,7 @@ public final class ScreenshotHandler {
             fbo = glCreateFramebuffers(); // Framebuffer can be re-used
             tex = 0;
             pbo = 0;
-            ptr = -1;
+            ptr = -1;//TODO: Persistent bind might be a horrible idea... or persistent and client side flags?
             width = -1;
             height = -1;
         }
