@@ -27,23 +27,16 @@ import com.falsepattern.lib.mixin.IMixinPlugin;
 import com.falsepattern.lib.mixin.ITargetedMod;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import lombok.val;
 import mega.trace.Share;
 import mega.trace.Tags;
 import mega.trace.natives.Tracy;
-import mega.trace.natives.UnsupportedPlatformException;
 import org.apache.logging.log4j.Logger;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 @Accessors(fluent = false)
 public class MixinPlugin implements IMixinPlugin {
-    static {
-        try {
-            Tracy.load();
-            Tracy.init();
-            Runtime.getRuntime().addShutdownHook(new Thread(Tracy::deinit));
-        } catch (UnsupportedPlatformException ex) {
-            Share.log.warn("Could not load Tracy natives!", ex);
-        }
-    }
     @Getter
     private final Logger logger = IMixinPlugin.createLogger(Tags.MOD_NAME + " Init");
 
@@ -61,4 +54,45 @@ public class MixinPlugin implements IMixinPlugin {
     public boolean useNewFindJar() {
         return true;
     }
+
+    // region Init Natives
+    static {
+        initNatives();
+    }
+
+    private static void initNatives() {
+        Share.log.info("Attempting to load natives");
+
+        try {
+            val internalErr = new AtomicReference<Throwable>();
+            // This is done on a seperate thread, as Tracy will treat the thread on which `Tracy.load()` is called
+            // As the "Main Thread" and does not support renaming it. Launching it on a separate thread lets us
+            // work around this limitation, so we can mark the `client` and `server` threads.
+            val tracyInitThread = new Thread(() -> {
+                try {
+                    Tracy.load();
+                    Tracy.init();
+                } catch (Throwable t) {
+                    internalErr.set(t);
+                }
+            });
+            tracyInitThread.setName("Tracy Init");
+            tracyInitThread.start();
+            tracyInitThread.join(5_000);
+
+            val t = internalErr.get();
+            if (t != null)
+                throw t;
+        } catch (Throwable t) {
+            Share.log.warn("Failed to load natives", t);
+            return;
+        }
+
+        val tracyDeinitThread = new Thread(Tracy::deinit);
+        tracyDeinitThread.setName("Tracy Deinit");
+        Runtime.getRuntime().addShutdownHook(tracyDeinitThread);
+
+        Share.log.info("Successfully loaded natives");
+    }
+    // endregion
 }
