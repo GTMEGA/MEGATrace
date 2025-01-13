@@ -9,7 +9,7 @@ group = "mega"
 
 minecraft_fp {
     java {
-        compatibility = jabel
+        compatibility = modern
     }
     mod {
         modid   = "megatrace"
