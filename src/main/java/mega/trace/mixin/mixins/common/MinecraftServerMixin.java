@@ -23,6 +23,7 @@
 package mega.trace.mixin.mixins.common;
 
 import mega.trace.IProfiler;
+import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -42,5 +43,12 @@ public abstract class MinecraftServerMixin {
             require = 1)
     private void onInit(CallbackInfo ci) {
         ((IProfiler)theProfiler).setName("sv_");
+    }
+
+    @Inject(method = "run",
+            at = @At(value = "HEAD"),
+            require = 1)
+    private void onRun(CallbackInfo ci) {
+        Tracy.markServerThread();
     }
 }

@@ -33,16 +33,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
      name = Tags.MOD_NAME,
      acceptedMinecraftVersions = "[1.7.10]",
      acceptableRemoteVersions = "*",
-     dependencies = "required-after:falsepatternlib@[1.5.4,);")
+     dependencies = "required-after:falsepatternlib@[1.5.9,);")
 public class MEGATrace {
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        try {
-            Tracy.load();
-            Tracy.init();
-            Runtime.getRuntime().addShutdownHook(new Thread(Tracy::deinit));
-        } catch (UnsupportedPlatformException ex) {
-            Share.log.warn("Could not load Tracy natives!", ex);
-        }
-    }
+
 }

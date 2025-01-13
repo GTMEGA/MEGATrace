@@ -47,6 +47,13 @@ public abstract class MinecraftMixin {
         ((IProfiler)mcProfiler).setName("cl_");
     }
 
+    @Inject(method = "run",
+            at = @At("HEAD"),
+            require = 1)
+    private void onRun(CallbackInfo ci) {
+        Tracy.markClientThread();
+    }
+
     @Inject(method = "runGameLoop",
             at = @At("HEAD"),
             require = 1)

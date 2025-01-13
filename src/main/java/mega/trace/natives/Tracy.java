@@ -31,4 +31,6 @@ public class Tracy {
     public static native void frameMark();
     public static native long initZone(byte[] function, byte[] file, int line, boolean active, byte[] name, int color);
     public static native void deinitZone(long zone);
+    public static native void markServerThread();
+    public static native void markClientThread();
 }

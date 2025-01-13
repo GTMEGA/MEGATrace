@@ -27,11 +27,23 @@ import com.falsepattern.lib.mixin.IMixinPlugin;
 import com.falsepattern.lib.mixin.ITargetedMod;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import mega.trace.Share;
 import mega.trace.Tags;
+import mega.trace.natives.Tracy;
+import mega.trace.natives.UnsupportedPlatformException;
 import org.apache.logging.log4j.Logger;
 
 @Accessors(fluent = false)
 public class MixinPlugin implements IMixinPlugin {
+    static {
+        try {
+            Tracy.load();
+            Tracy.init();
+            Runtime.getRuntime().addShutdownHook(new Thread(Tracy::deinit));
+        } catch (UnsupportedPlatformException ex) {
+            Share.log.warn("Could not load Tracy natives!", ex);
+        }
+    }
     @Getter
     private final Logger logger = IMixinPlugin.createLogger(Tags.MOD_NAME + " Init");
 

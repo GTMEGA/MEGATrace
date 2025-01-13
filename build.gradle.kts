@@ -37,7 +37,7 @@ repositories {
 }
 
 dependencies {
-    implementationSplit("com.falsepattern:falsepatternlib-mc1.7.10:1.5.4")
+    implementationSplit("com.falsepattern:falsepatternlib-mc1.7.10:1.5.9")
 }
 
 val zigOutDir = layout.buildDirectory.dir("zig")

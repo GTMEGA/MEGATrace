@@ -49,6 +49,14 @@ pub fn frameMark(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
     tracy.frameMark();
 }
 
+pub fn markServerThread(_: *jni.cEnv, _:jni.jclass) callconv(.c) void {
+    tracy.setThreadName("server");
+}
+
+pub fn markClientThread(_: *jni.cEnv, _:jni.jclass) callconv(.c) void {
+    tracy.setThreadName("client");
+}
+
 pub fn critical_frameMark() callconv(.c) void {
     tracy.frameMark();
 }
