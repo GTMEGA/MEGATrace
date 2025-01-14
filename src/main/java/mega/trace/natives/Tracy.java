@@ -43,4 +43,6 @@ public class Tracy {
     public static native void gpu_newContext(long gpuTime, float period, byte context);
     public static native void gpu_calibration(long gpuTime, long cpuDelta, byte context);
     public static native void gpu_timeSync(long gpuTime, byte context);
+
+    public static native void frameImage(long image, short width, short height, byte offset, boolean flip);
 }

@@ -59,10 +59,17 @@ public abstract class MinecraftMixin {
     @Inject(method = "runGameLoop",
             at = @At("HEAD"),
             require = 1)
-    private void frame(CallbackInfo ci) {
+    private void startFrame(CallbackInfo ci) {
         GLAsyncTasks.nextFrame();
-        ScreenshotHandler.queueScreenshot();
         Tracy.frameMark();
+    }
+
+    @Inject(method = "runGameLoop",
+            at = @At(value = "INVOKE",
+                     target = "Lnet/minecraft/client/Minecraft;func_147120_f()V"),
+            require = 1)
+    private void preSwapBuffers(CallbackInfo ci) {
+        ScreenshotHandler.queueScreenshot();
     }
 
     @ModifyConstant(method = "runGameLoop",

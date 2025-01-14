@@ -191,6 +191,13 @@ pub fn critical_gpu_timeSync(gpuTime: jni.jlong, context: jni.jbyte) void {
     GPU.timeSync(@bitCast(gpuTime), @bitCast(context));
 }
 
+pub fn jni_frameImage(_: *jni.cEnv, _: jni.jclass, image: jni.jlong, width: jni.jshort, height: jni.jshort, offset: jni.jbyte, flip: jni.jboolean) callconv(.c) void {
+    tracy.frameImage(@ptrFromInt(@as(usize, @bitCast(image))), @bitCast(width), @bitCast(height), @bitCast(offset), jni.jbooleanToBool(flip));
+}
+
+pub fn critical_frameImage(image: jni.jlong, width: jni.jshort, height: jni.jshort, offset: jni.jbyte, flip: jni.jboolean) void {
+    tracy.frameImage(@ptrFromInt(@as(usize, @bitCast(image))), @bitCast(width), @bitCast(height), @bitCast(offset), jni.jbooleanToBool(flip));
+}
 
 // Utils
 
