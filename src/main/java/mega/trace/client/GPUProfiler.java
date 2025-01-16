@@ -37,12 +37,12 @@ import static org.lwjgl.opengl.GL46C.*;
 @Lwjgl3Aware
 @UtilityClass
 public final class GPUProfiler {
-    private static final byte CONTEXT_ID = 1;
+    private static final byte CONTEXT_ID = 0;
 
-    private static final PriorityQueue<GPUSyncQuery> queryPool = new ObjectArrayFIFOQueue<>(1024);
+    private static final PriorityQueue<GPUSyncQuery> queryPool = new ObjectArrayFIFOQueue<>(16384);
 
     public static void init() {
-        for (var i = 0; i < 1024; i++) {
+        for (var i = 0; i < 16384; i++) {
             queryPool.enqueue(new GPUSyncQuery());
         }
 
@@ -90,15 +90,17 @@ public final class GPUProfiler {
         final int glQueryPush = glGenQueries();
         final int glQueryPop = glGenQueries();
 
-        final short queryIdPush = lastQueryId++;
-        final short queryIdPop = lastQueryId++;
+        short queryIdPush;
+        short queryIdPop;
 
         void push(long srcLoc) {
+            queryIdPush = lastQueryId++;
             glQueryCounter(glQueryPush, GL_TIMESTAMP);
             Tracy.gpuBeginZone(srcLoc, queryIdPush, CONTEXT_ID);
         }
 
         void pop() {
+            queryIdPop = lastQueryId++;
             glQueryCounter(glQueryPop, GL_TIMESTAMP);
             Tracy.gpuEndZone(queryIdPop, CONTEXT_ID);
             GLAsyncTasks.queueTask(this);

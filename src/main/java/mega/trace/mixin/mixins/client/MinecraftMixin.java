@@ -67,6 +67,21 @@ public abstract class MinecraftMixin {
         Tracy.frameMark();
     }
 
+//    @Redirect(method = "runGameLoop",
+//              at = @At(value = "INVOKE",
+//                       target = "Lorg/lwjgl/opengl/GL11;glFlush()V"),
+//              require = 1)
+//    private void noFlush() {
+//
+//    }
+
+    @Inject(method = "runGameLoop",
+            at = @At("RETURN"),
+            require = 1)
+    private void endFrame(CallbackInfo ci) {
+        GPUProfiler.endSection();
+    }
+
     @Inject(method = "runGameLoop",
             at = @At(value = "INVOKE",
                      target = "Lnet/minecraft/client/Minecraft;func_147120_f()V"),
@@ -74,8 +89,6 @@ public abstract class MinecraftMixin {
     private void preSwapBuffers(CallbackInfo ci) {
         GPUProfiler.startSection("queue_screenshot");
         ScreenshotHandler.queueScreenshot();
-        GPUProfiler.endSection();
-
         GPUProfiler.endSection();
     }
 
