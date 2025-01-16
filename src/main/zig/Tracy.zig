@@ -28,15 +28,26 @@ var arenaAlloc: std.heap.ArenaAllocator = undefined;
 var alloc: std.mem.Allocator = undefined;
 var source_mutex: std.Thread.Mutex = .{};
 var source_registry: std.StringHashMap(*const tracy.TracySourceLocationData) = undefined;
+var gpu_source_mutex: std.Thread.Mutex = .{};
+var gpu_source_registry: std.StringHashMap(*const GPUTracyLocationData) = undefined;
 var zone_mutex: std.Thread.Mutex = .{};
 var zone_registry: std.AutoHashMap(jni.jlong, tracy.ZoneContext) = undefined;
 var counter: std.atomic.Value(jni.jlong) = undefined;
+
+const GPUTracyLocationData = struct {
+    line: u32,
+    source: [:0]const u8,
+    function: [:0]const u8,
+    name: ?[:0]const u8,
+    color: u32,
+};
 
 pub fn init(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
     tracingAlloc = tracy.TracingAllocator.init(std.heap.c_allocator);
     arenaAlloc = std.heap.ArenaAllocator.init(tracingAlloc.allocator());
     alloc = arenaAlloc.allocator();
     source_registry = @TypeOf(source_registry).init(alloc);
+    gpu_source_registry = @TypeOf(gpu_source_registry).init(alloc);
     zone_registry = @TypeOf(zone_registry).init(alloc);
     counter = @TypeOf(counter).init(1);
     tracy.setThreadName("Main");
@@ -132,7 +143,30 @@ pub fn jni_gpuAllocSrcLoc(cEnv: *jni.cEnv, _: jni.jclass, jFile: jni.jbyteArray,
         return 0;
     const name = getByteArray(env, jName);
     defer freeByteArray(env, jName, name);
-    return @bitCast(tracy.allocSrcLoc(@bitCast(line), file.?, function.?, name, @bitCast(color)));
+    if (name == null)
+        return 0;
+    return allocSrcLoc(line, file.?, function.?, name.?, color) catch 0;
+}
+
+fn allocSrcLoc(line: jni.jint, source: [:0]const u8, function: [:0]const u8, name: [:0]const u8, color: jni.jint) !jni.jlong {
+    const src = blk: {
+        while (!gpu_source_mutex.tryLock()) {}
+        defer gpu_source_mutex.unlock();
+        break :blk if (gpu_source_registry.get(name)) |k| k else blk2: {
+            const key = (try cloneString(name)).?;
+            const value = try alloc.create(GPUTracyLocationData);
+            value.* = .{
+                .line = @bitCast(line),
+                .source = @ptrCast(try cloneString(source)),
+                .function = @ptrCast(try cloneString(function)),
+                .name = key,
+                .color = @bitCast(color),
+            };
+            try gpu_source_registry.put(key, value);
+            break :blk2 value;
+        };
+    };
+    return @bitCast(tracy.allocSrcLoc(src.line, src.source, src.function, src.name, src.color));
 }
 
 pub fn jni_gpuBeginZone(_: *jni.cEnv, _: jni.jclass, srcLoc: jni.jlong, queryId: jni.jshort, context: jni.jbyte) callconv(.c) void {
