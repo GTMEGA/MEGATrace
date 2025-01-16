@@ -24,6 +24,7 @@ package mega.trace.mixin.mixins.client;
 
 import mega.trace.IProfiler;
 import mega.trace.client.GLAsyncTasks;
+import mega.trace.client.GPUProfiler;
 import mega.trace.client.ScreenshotHandler;
 import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Final;
@@ -49,11 +50,20 @@ public abstract class MinecraftMixin {
         ((IProfiler)mcProfiler).setName("cl_");
     }
 
+    @Inject(method = "startGame",
+            at = @At("RETURN"),
+            require = 1)
+    private void postGameStart(CallbackInfo ci) {
+        GPUProfiler.init();
+    }
+
     @Inject(method = "runGameLoop",
             at = @At("HEAD"),
             require = 1)
     private void startFrame(CallbackInfo ci) {
         GLAsyncTasks.nextFrame();
+        GPUProfiler.timeSync();
+        GPUProfiler.startSection("root");
         Tracy.frameMark();
     }
 
@@ -62,7 +72,11 @@ public abstract class MinecraftMixin {
                      target = "Lnet/minecraft/client/Minecraft;func_147120_f()V"),
             require = 1)
     private void preSwapBuffers(CallbackInfo ci) {
+        GPUProfiler.startSection("queue_screenshot");
         ScreenshotHandler.queueScreenshot();
+        GPUProfiler.endSection();
+
+        GPUProfiler.endSection();
     }
 
     @ModifyConstant(method = "runGameLoop",

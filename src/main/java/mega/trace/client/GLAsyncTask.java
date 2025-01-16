@@ -23,7 +23,17 @@
 package mega.trace.client;
 
 public interface GLAsyncTask {
-    void start(int currentFrame);
+    default void start(int currentFrame) {
+        start();
+    }
 
-    void end(int currentFrame);
+    default void start() {
+    }
+
+    default void end(int currentFrame) {
+        end();
+    }
+
+    default void end() {
+    }
 }
