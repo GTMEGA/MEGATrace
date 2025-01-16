@@ -66,7 +66,8 @@ public final class GLAsyncTasks {
         futureSync.enqueue(currentSync);
     }
 
-    public static void queueTask(Runnable task) {
+    public static void queueTask(GLAsyncTask task) {
+        task.start(currentFrame);
         currentSync.queueTask(task);
     }
 
@@ -77,13 +78,13 @@ public final class GLAsyncTasks {
     @Lwjgl3Aware
     private static class GLSyncTaskQueue {
         long sync = 0L;
-        final PriorityQueue<Runnable> tasks = new ObjectArrayFIFOQueue<>(32);
+        final PriorityQueue<GLAsyncTask> tasks = new ObjectArrayFIFOQueue<>(32);
 
         void start() {
             sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         }
 
-        void queueTask(Runnable task) {
+        void queueTask(GLAsyncTask task) {
             tasks.enqueue(task);
         }
 
@@ -94,7 +95,7 @@ public final class GLAsyncTasks {
                 return false;
             // Run tasks
             while (!tasks.isEmpty())
-                tasks.dequeue().run();
+                tasks.dequeue().end(currentFrame);
             return true;
         }
 

@@ -43,17 +43,11 @@ public final class ScreenshotHandler {
     }
 
     public static void queueScreenshot() {
-        val buffer = bufferPool.dequeue();
-        buffer.prepare();
-        buffer.capture(GLAsyncTasks.currentFrame());
-        GLAsyncTasks.queueTask(() -> {
-            buffer.submit(GLAsyncTasks.currentFrame());
-            bufferPool.enqueue(buffer);
-        });
+        GLAsyncTasks.queueTask(bufferPool.dequeue());
     }
 
     @Lwjgl3Aware
-    private static class ScreenshotBuffer {
+    private static class ScreenshotBuffer implements GLAsyncTask {
         short srcWidth;
         short srcHeight;
 
@@ -66,6 +60,18 @@ public final class ScreenshotHandler {
         int pboSizeBytes;
 
         int capturedFrame;
+
+        @Override
+        public void start(int currentFrame) {
+            prepare();
+            capture(currentFrame);
+        }
+
+        @Override
+        public void end(int currentFrame) {
+            submit(currentFrame);
+            bufferPool.enqueue(this);
+        }
 
         void prepare() {
             val mcFb = Minecraft.getMinecraft().getFramebuffer();
