@@ -54,47 +54,4 @@ public class MixinPlugin implements IMixinPlugin {
     public boolean useNewFindJar() {
         return true;
     }
-
-    // region Init Natives
-    static {
-        initNatives();
-    }
-
-    private static void initNatives() {
-        Share.log.info("Attempting to load natives");
-
-        try {
-            val internalErr = new AtomicReference<Throwable>();
-            // This is done on a seperate thread, as Tracy will treat the thread on which `Tracy.load()` is called
-            // As the "Main Thread" and does not support renaming it. Launching it on a separate thread lets us
-            // work around this limitation, so we can mark the `client` and `server` threads.
-            val tracyInitThread = new Thread(() -> {
-                try {
-                    Tracy.load();
-                    Tracy.init();
-                } catch (Throwable t) {
-                    internalErr.set(t);
-                }
-            });
-            tracyInitThread.setName("Tracy Init");
-
-            //TODO: Starting threading during class loading doesn't work so good, put in regular constructor
-            tracyInitThread.start();
-            tracyInitThread.join(5_000);
-
-            val t = internalErr.get();
-            if (t != null)
-                throw t;
-        } catch (Throwable t) {
-            Share.log.warn("Failed to load natives", t);
-            return;
-        }
-
-        val tracyDeinitThread = new Thread(Tracy::deinit);
-        tracyDeinitThread.setName("Tracy Deinit");
-        Runtime.getRuntime().addShutdownHook(tracyDeinitThread);
-
-        Share.log.info("Successfully loaded natives");
-    }
-    // endregion
 }

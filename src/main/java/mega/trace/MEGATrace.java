@@ -22,11 +22,13 @@
 
 package mega.trace;
 
+import lombok.val;
 import mega.trace.natives.Tracy;
-import mega.trace.natives.UnsupportedPlatformException;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 @Mod(modid = Tags.MOD_ID,
      version = Tags.MOD_VERSION,
@@ -35,5 +37,44 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
      acceptableRemoteVersions = "*",
      dependencies = "required-after:falsepatternlib@[1.5.9,);")
 public class MEGATrace {
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        initNatives();
+    }
 
+    private static void initNatives() {
+        Share.log.info("Attempting to load natives");
+
+        try {
+            val internalErr = new AtomicReference<Throwable>();
+            // This is done on a seperate thread, as Tracy will treat the thread on which `Tracy.load()` is called
+            // As the "Main Thread" and does not support renaming it. Launching it on a separate thread lets us
+            // work around this limitation, so we can mark the `client` and `server` threads.
+            val tracyInitThread = new Thread(() -> {
+                try {
+                    Tracy.load();
+                    Tracy.init();
+                } catch (Throwable t) {
+                    internalErr.set(t);
+                }
+            });
+            tracyInitThread.setName("Tracy Init");
+
+            tracyInitThread.start();
+            tracyInitThread.join(5_000);
+
+            val t = internalErr.get();
+            if (t != null)
+                throw t;
+        } catch (Throwable t) {
+            Share.log.warn("Failed to load natives", t);
+            return;
+        }
+
+        val tracyDeinitThread = new Thread(Tracy::deinit);
+        tracyDeinitThread.setName("Tracy Deinit");
+        Runtime.getRuntime().addShutdownHook(tracyDeinitThread);
+
+        Share.log.info("Successfully loaded natives");
+    }
 }

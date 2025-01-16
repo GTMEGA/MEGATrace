@@ -33,8 +33,6 @@ public class Tracy {
     public static native void frameMark();
     public static native long initZone(byte[] function, byte[] file, int line, boolean active, byte[] name, int color);
     public static native void deinitZone(long zone);
-    public static native void markServerThread();
-    public static native void markClientThread();
 
     public static native long gpu_allocSrcLoc(byte[] file, byte[] function, int line, byte @Nullable [] name, int color);
     public static native void gpu_beginZone(long srcLoc, short queryId, byte context);
