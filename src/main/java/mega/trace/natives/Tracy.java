@@ -22,8 +22,6 @@
 
 package mega.trace.natives;
 
-import org.jetbrains.annotations.Nullable;
-
 public class Tracy {
     public static void load() throws UnsupportedPlatformException {
         new NativeLoader().loadNative(Tracy.class, "Tracy");
@@ -34,13 +32,13 @@ public class Tracy {
     public static native long initZone(byte[] function, byte[] file, int line, boolean active, byte[] name, int color);
     public static native void deinitZone(long zone);
 
-    public static native long gpu_allocSrcLoc(byte[] file, byte[] function, int line, byte @Nullable [] name, int color);
-    public static native void gpu_beginZone(long srcLoc, short queryId, byte context);
-    public static native void gpu_endZone(short queryId, byte context);
-    public static native void gpu_time(long gpuTime, short queryId, byte context);
-    public static native void gpu_newContext(long gpuTime, float period, byte context);
-    public static native void gpu_calibration(long gpuTime, long cpuDelta, byte context);
-    public static native void gpu_timeSync(long gpuTime, byte context);
+    public static native long gpuAllocSrcLoc(byte[] file, byte[] function, int line, byte [] name, int color);
+    public static native void gpuBeginZone(long srcLoc, short queryId, byte context);
+    public static native void gpuEndZone(short queryId, byte context);
+    public static native void gpuTime(long gpuTime, short queryId, byte context);
+    public static native void gpuNewContext(long gpuTime, float period, byte context);
+    public static native void gpuCalibration(long gpuTime, long cpuDelta, byte context);
+    public static native void gpuTimeSync(long gpuTime, byte context);
 
     public static native void frameImage(long image, short width, short height, byte offset, boolean flip);
 }
