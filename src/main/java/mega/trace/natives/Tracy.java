@@ -28,17 +28,20 @@ public class Tracy {
     }
     public static native void init();
     public static native void deinit();
+
     public static native void frameMark();
-    public static native long initZone(byte[] function, byte[] file, int line, boolean active, byte[] name, int color);
-    public static native void deinitZone(long zone);
 
-    public static native long gpuAllocSrcLoc(byte[] file, byte[] function, int line, byte [] name, int color);
-    public static native void gpuBeginZone(long srcLoc, short queryId, byte context);
-    public static native void gpuEndZone(short queryId, byte context);
-    public static native void gpuTime(long gpuTime, short queryId, byte context);
-    public static native void gpuNewContext(long gpuTime, float period, byte context);
-    public static native void gpuCalibration(long gpuTime, long cpuDelta, byte context);
-    public static native void gpuTimeSync(long gpuTime, byte context);
+    public static native long beginZone(byte[] name, int color);
+    public static native void endZone(long zone);
 
-    public static native void frameImage(long image, short width, short height, byte offset, boolean flip);
+    public static native void gpuInit(long gpuTime);
+
+    public static native void gpuTimeSync(long gpuTime);
+
+    public static native short gpuBeginZone(byte[] name, int color);
+    public static native short gpuEndZone();
+
+    public static native void gpuTime(short queryId, long gpuTime);
+
+    public static native void frameImage(byte offset, long image, short width, short height);
 }

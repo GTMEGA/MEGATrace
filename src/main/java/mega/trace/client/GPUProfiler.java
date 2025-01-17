@@ -37,8 +37,6 @@ import static org.lwjgl.opengl.GL46C.*;
 @Lwjgl3Aware
 @UtilityClass
 public final class GPUProfiler {
-    private static final byte CONTEXT_ID = 0;
-
     private static final PriorityQueue<GPUSyncQuery> queryPool = new ObjectArrayFIFOQueue<>(16384);
 
     public static void init() {
@@ -47,8 +45,7 @@ public final class GPUProfiler {
         }
 
         val gpuTime = glGetInteger64(GL_TIMESTAMP);
-        val period = 1F;
-        Tracy.gpuNewContext(gpuTime, period, CONTEXT_ID);
+        Tracy.gpuInit(gpuTime);
     }
 
     private static int lastSync = 0;
@@ -57,7 +54,7 @@ public final class GPUProfiler {
         lastSync++;
         if (lastSync > 100) {
             val gpuTime = glGetInteger64(GL_TIMESTAMP);
-            Tracy.gpuTimeSync(gpuTime, CONTEXT_ID);
+            Tracy.gpuTimeSync(gpuTime);
             lastSync = 0;
         }
     }
@@ -65,15 +62,8 @@ public final class GPUProfiler {
     private static final Stack<GPUSyncQuery> sections = new Stack<>();
 
     public static void startSection(String name) {
-        final long srcLoc;
-        {
-            val dummyBytes = "Frame".getBytes(StandardCharsets.UTF_8);
-            val nameBytes = ("gl_" + name).getBytes(StandardCharsets.UTF_8);
-            srcLoc = Tracy.gpuAllocSrcLoc(dummyBytes, dummyBytes, 0, nameBytes, 0);
-        }
-
         val section = queryPool.dequeue();
-        section.push(srcLoc);
+        section.push("gl_" + name, 0);
         sections.push(section);
     }
 
@@ -85,24 +75,20 @@ public final class GPUProfiler {
 
     @Lwjgl3Aware
     private static class GPUSyncQuery implements GLAsyncTask {
-        private static short lastQueryId = 1;
-
         final int glQueryPush = glGenQueries();
         final int glQueryPop = glGenQueries();
 
         short queryIdPush;
         short queryIdPop;
 
-        void push(long srcLoc) {
-            queryIdPush = lastQueryId++;
+        void push(String name, int color) {
+            queryIdPush = Tracy.gpuBeginZone(name.getBytes(StandardCharsets.UTF_8), color);
             glQueryCounter(glQueryPush, GL_TIMESTAMP);
-            Tracy.gpuBeginZone(srcLoc, queryIdPush, CONTEXT_ID);
         }
 
         void pop() {
-            queryIdPop = lastQueryId++;
             glQueryCounter(glQueryPop, GL_TIMESTAMP);
-            Tracy.gpuEndZone(queryIdPop, CONTEXT_ID);
+            queryIdPop = Tracy.gpuEndZone();
             GLAsyncTasks.queueTask(this);
         }
 
@@ -111,8 +97,8 @@ public final class GPUProfiler {
             val gpuTimePush = glGetQueryObjectui64(glQueryPush, GL_QUERY_RESULT);
             val gpuTimePop = glGetQueryObjectui64(glQueryPop, GL_QUERY_RESULT);
 
-            Tracy.gpuTime(gpuTimePush, queryIdPush, CONTEXT_ID);
-            Tracy.gpuTime(gpuTimePop, queryIdPop, CONTEXT_ID);
+            Tracy.gpuTime(queryIdPush, gpuTimePush);
+            Tracy.gpuTime(queryIdPop, gpuTimePop);
 
             queryPool.enqueue(this);
         }

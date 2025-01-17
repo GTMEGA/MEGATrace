@@ -49,7 +49,7 @@ public abstract class ProfilerMixin implements IProfiler {
             at = @At("HEAD"),
             require = 1)
     private void startSection(String name, CallbackInfo ci) {
-        sections.push(Tracy.initZone(null, null, 0, true, (this.name + name).getBytes(StandardCharsets.UTF_8), 0));
+        sections.push(Tracy.beginZone((this.name + name).getBytes(StandardCharsets.UTF_8), 0));
     }
 
     @Inject(method = "endSection",
@@ -57,7 +57,7 @@ public abstract class ProfilerMixin implements IProfiler {
             require = 1)
     private void endSection(CallbackInfo ci) {
         if (!sections.isEmpty()) {
-            Tracy.deinitZone(sections.pop());
+            Tracy.endZone(sections.pop());
         }
     }
 

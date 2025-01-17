@@ -128,7 +128,7 @@ public final class ScreenshotHandler {
         void submit(int currentFrame) {
             val image = nglMapNamedBuffer(pbo, GL_READ_ONLY);
             val offset = (byte) (currentFrame - capturedFrame);
-            Tracy.frameImage(image, texWidth, texHeight, offset, true);
+            Tracy.frameImage(offset, image, texWidth, texHeight);
             glUnmapNamedBuffer(pbo);
         }
     }
