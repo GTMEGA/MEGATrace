@@ -62,9 +62,18 @@ public abstract class MinecraftMixin {
             require = 1)
     private void startFrame(CallbackInfo ci) {
         GLAsyncTasks.nextFrame();
-        GPUProfiler.timeSync();
-        GPUProfiler.startSection("root");
         Tracy.frameMark();
+        GPUProfiler.timeSync();
+        GPUProfiler.startSection("preRender");
+    }
+
+    @Inject(method = "runGameLoop",
+            at = @At(value = "CONSTANT",
+                     args = "stringValue=preRenderErrors"),
+            require = 1)
+    private void preRenderErrors(CallbackInfo ci) {
+        GPUProfiler.endSection();
+        GPUProfiler.startSection("render");
     }
 
 //    @Redirect(method = "runGameLoop",
