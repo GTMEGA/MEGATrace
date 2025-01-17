@@ -71,7 +71,7 @@ tasks.withType<ZigBuild>().all {
     extraArgs.add(mod.name.map { "-Dmod_name=$it" })
     extraArgs.add(mod.version.map { "-Dmod_version=$it" })
     extraArgs.add(mod.rootPkg.map { "-Droot_pkg=$it" })
-    extraArgs.add("-Dstrip")
+//    extraArgs.add("-Dstrip")
 
     zigClean.configure {
         group = "zig"
