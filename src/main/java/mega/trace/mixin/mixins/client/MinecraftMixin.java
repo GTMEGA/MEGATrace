@@ -79,7 +79,7 @@ public abstract class MinecraftMixin {
             at = @At("RETURN"),
             require = 1)
     private void endFrame(CallbackInfo ci) {
-        GPUProfiler.endSection();
+//        GPUProfiler.endSection();
     }
 
     @Inject(method = "runGameLoop",
@@ -89,6 +89,7 @@ public abstract class MinecraftMixin {
     private void preSwapBuffers(CallbackInfo ci) {
         GPUProfiler.startSection("queue_screenshot");
         ScreenshotHandler.queueScreenshot();
+        GPUProfiler.endSection();
         GPUProfiler.endSection();
     }
 
