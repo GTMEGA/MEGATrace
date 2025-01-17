@@ -41,7 +41,6 @@ var alloc: std.mem.Allocator = undefined;
 
 var name_intern_pool: intern_pool.StringInternPool = undefined;
 var source_location_pool: SourceLocationInternPool = undefined;
-var gpu_location_map: std.StringHashMap(u64) = undefined;
 var gpu_query_id_counter =  std.atomic.Value(u16).init(0);
 
 const SourceLocationInternPool = intern_pool.InternPool([:0]const u8, *const tracy.TracySourceLocationData, struct {
@@ -73,11 +72,9 @@ pub fn jni_init(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
     alloc = arena_alloc.allocator();
     name_intern_pool = intern_pool.StringInternPool.init(alloc);
     source_location_pool = SourceLocationInternPool.init(alloc);
-    gpu_location_map = std.StringHashMap(u64).init(alloc);
 }
 
 pub fn jni_deinit(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
-    gpu_location_map.deinit();
     source_location_pool.deinit();
     name_intern_pool.deinit();
     arena_alloc.deinit();
@@ -171,24 +168,7 @@ fn gpuBeginZone(name: [:0]const u8, color: u32) !u16 {
         query_id = gpu_query_id_counter.fetchAdd(1, .monotonic);
     }
     const interned_name = try name_intern_pool.intern(name, name);
-    const get_or_put = try gpu_location_map.getOrPut(interned_name);
-    errdefer {
-        if (!get_or_put.found_existing) {
-            _ = gpu_location_map.remove(interned_name);
-        }
-    }
-    var gpu_loc: u64 = undefined;
-    if (!get_or_put.found_existing) {
-        const new_loc = tracy.allocSrcLoc(default_line, default_file, default_function, interned_name, color);
-        if (new_loc == 0) {
-            return error.TracyAllocFailed;
-        }
-        gpu_loc = new_loc;
-        get_or_put.value_ptr.* = new_loc;
-    } else {
-        gpu_loc = get_or_put.value_ptr.*;
-    }
-
+    const gpu_loc = tracy.allocSrcLoc(default_line, default_file, default_function, interned_name, color);
     GPU.beginZone(gpu_loc, query_id, default_gpu_context);
     return query_id;
 }
