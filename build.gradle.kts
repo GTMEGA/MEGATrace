@@ -33,13 +33,14 @@ minecraft_fp {
 }
 
 repositories {
-    exclusive(mavenpattern(), "com.falsepattern")
+    exclusive(mavenpattern(), "com.falsepattern", "makamys")
     exclusive(mavenCentral(), "it.unimi.dsi")
 }
 
 dependencies {
     implementationSplit("com.falsepattern:falsepatternlib-mc1.7.10:1.5.9")
     implementation("it.unimi.dsi:fastutil:8.5.15")
+    compileOnly("makamys:neodymium-mc1.7.10:0.4.3-unofficial:dev")
 }
 
 val zigOutDir = layout.buildDirectory.dir("zig")

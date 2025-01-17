@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static com.falsepattern.lib.mixin.IMixin.PredicateHelpers.always;
+import static com.falsepattern.lib.mixin.IMixin.PredicateHelpers.require;
+import static mega.trace.mixin.plugin.TargetedMod.NEODYMIUM;
 
 @Accessors(fluent = false)
 @RequiredArgsConstructor
@@ -40,6 +42,8 @@ public enum Mixin implements IMixin {
     MinecraftServerMixin(Side.COMMON, always(), "MinecraftServerMixin"),
     ProfilerMixin(Side.COMMON, always(), "ProfilerMixin"),
     NetHandlerPlayServerMixin(Side.COMMON, always(), "NetHandlerPlayServerMixin"),
+
+    neodymium_NeoRendererMixin(Side.CLIENT, require(NEODYMIUM), "neodymium.NeoRendererMixin"),
     ;
 
     @Getter

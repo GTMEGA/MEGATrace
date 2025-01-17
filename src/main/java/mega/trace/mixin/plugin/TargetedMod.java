@@ -29,9 +29,12 @@ import lombok.experimental.Accessors;
 
 import java.util.function.Predicate;
 
+import static com.falsepattern.lib.mixin.ITargetedMod.PredicateHelpers.contains;
+
 @Accessors(fluent = false)
 @RequiredArgsConstructor
 public enum TargetedMod implements ITargetedMod {
+    NEODYMIUM("Neodymium", false, contains("neodymium-")),
     ;
 
     @Getter
