@@ -23,6 +23,7 @@
 package mega.trace.mixin.mixins.common;
 
 import mega.trace.IProfiler;
+import mega.trace.MEGATrace;
 import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,6 +39,12 @@ import java.util.Stack;
 public abstract class ProfilerMixin implements IProfiler {
     private Stack<Long> sections = new Stack<>();
     private String name = "";
+
+    static {
+        // TODO: This is here because sometimes the profiler stuff gets called early
+        MEGATrace.initNatives();
+    }
+
     @Inject(method = "startSection",
             at = @At("HEAD"),
             require = 1)

@@ -37,12 +37,17 @@ import java.util.concurrent.atomic.AtomicReference;
      acceptableRemoteVersions = "*",
      dependencies = "required-after:falsepatternlib@[1.5.9,);")
 public class MEGATrace {
+    private static volatile boolean nativesLoaded;
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         initNatives();
     }
 
-    private static void initNatives() {
+    public static synchronized void initNatives() {
+        if (nativesLoaded)
+            return;
+
         Share.log.info("Attempting to load natives");
 
         try {
@@ -67,8 +72,7 @@ public class MEGATrace {
             if (t != null)
                 throw t;
         } catch (Throwable t) {
-            Share.log.warn("Failed to load natives", t);
-            return;
+            throw new RuntimeException("Failed to load natives", t);
         }
 
         val tracyDeinitThread = new Thread(Tracy::deinit);
@@ -76,5 +80,6 @@ public class MEGATrace {
         Runtime.getRuntime().addShutdownHook(tracyDeinitThread);
 
         Share.log.info("Successfully loaded natives");
+        nativesLoaded = true;
     }
 }
