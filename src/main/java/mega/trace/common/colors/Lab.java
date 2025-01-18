@@ -1,7 +1,7 @@
 /*
  * This file is part of MEGATrace.
  *
- * Copyright (C) 2024 The MEGA Team
+ * Copyright (C) 2024-2025 The MEGA Team
  * All Rights Reserved
  *
  * The above copyright notice, this permission notice and the word "MEGA"
