@@ -24,4 +24,5 @@ package mega.trace;
 
 public interface IProfiler {
     void setName(String name);
+    void includeGpu();
 }

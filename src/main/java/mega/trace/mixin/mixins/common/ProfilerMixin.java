@@ -24,6 +24,7 @@ package mega.trace.mixin.mixins.common;
 
 import mega.trace.IProfiler;
 import mega.trace.MEGATrace;
+import mega.trace.client.GPUProfiler;
 import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,6 +40,7 @@ import java.util.Stack;
 public abstract class ProfilerMixin implements IProfiler {
     private Stack<Long> sections = new Stack<>();
     private String name = "";
+    private boolean includeGpu = false;
 
     static {
         // TODO: This is here because sometimes the profiler stuff gets called early
@@ -50,6 +52,9 @@ public abstract class ProfilerMixin implements IProfiler {
             require = 1)
     private void startSection(String name, CallbackInfo ci) {
         sections.push(Tracy.beginZone((this.name + name).getBytes(StandardCharsets.UTF_8), 0));
+        if (includeGpu) {
+            GPUProfiler.startSection(this.name + name, 0x46c26b);
+        }
     }
 
     @Inject(method = "endSection",
@@ -58,11 +63,19 @@ public abstract class ProfilerMixin implements IProfiler {
     private void endSection(CallbackInfo ci) {
         if (!sections.isEmpty()) {
             Tracy.endZone(sections.pop());
+            if (includeGpu) {
+                GPUProfiler.endSection();
+            }
         }
     }
 
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public void includeGpu() {
+        this.includeGpu = true;
     }
 }
