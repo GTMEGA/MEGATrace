@@ -34,7 +34,8 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 @AllArgsConstructor
-@Accessors(fluent = true, chain = false)
+@Accessors(fluent = true,
+           chain = false)
 public final class CPUProfiler implements TracyProfiler {
     static {
         // TODO: This is here because sometimes the profiler stuff gets called early

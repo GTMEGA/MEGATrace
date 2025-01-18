@@ -29,9 +29,15 @@ import lombok.experimental.Accessors;
 import lombok.val;
 import me.eigenraven.lwjgl3ify.api.Lwjgl3Aware;
 
-import static org.lwjgl.opengl.GL46C.*;
+import static org.lwjgl.opengl.GL46C.GL_SYNC_FLUSH_COMMANDS_BIT;
+import static org.lwjgl.opengl.GL46C.GL_SYNC_GPU_COMMANDS_COMPLETE;
+import static org.lwjgl.opengl.GL46C.GL_TIMEOUT_EXPIRED;
+import static org.lwjgl.opengl.GL46C.glClientWaitSync;
+import static org.lwjgl.opengl.GL46C.glDeleteSync;
+import static org.lwjgl.opengl.GL46C.glFenceSync;
 
-@Accessors(fluent = true, chain = false)
+@Accessors(fluent = true,
+           chain = false)
 public final class GLAsyncTasks {
     private static final int MAX_SYNC_COUNT = 32;
     private static final int FUTURE_SYNC_MIN_DELAY = 4;

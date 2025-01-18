@@ -22,11 +22,11 @@
 
 package mega.trace.mixin.mixins.client;
 
-import mega.trace.mixin.interfaces.IProfilerMixin;
 import mega.trace.client.GLAsyncTasks;
 import mega.trace.client.GPUProfiler;
 import mega.trace.client.ScreenshotHandler;
 import mega.trace.common.CPUProfiler;
+import mega.trace.mixin.interfaces.IProfilerMixin;
 import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

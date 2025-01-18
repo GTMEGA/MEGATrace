@@ -27,13 +27,8 @@ import com.falsepattern.lib.mixin.IMixinPlugin;
 import com.falsepattern.lib.mixin.ITargetedMod;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import lombok.val;
-import mega.trace.Share;
 import mega.trace.Tags;
-import mega.trace.natives.Tracy;
 import org.apache.logging.log4j.Logger;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 @Accessors(fluent = false)
 public class MixinPlugin implements IMixinPlugin {

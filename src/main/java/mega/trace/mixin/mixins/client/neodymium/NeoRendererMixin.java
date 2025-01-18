@@ -25,7 +25,6 @@ package mega.trace.mixin.mixins.client.neodymium;
 import lombok.val;
 import makamys.neodymium.Compat;
 import makamys.neodymium.renderer.NeoRenderer;
-import mega.trace.client.GPUProfiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,7 +32,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.client.Minecraft;
 
-@Mixin(value = NeoRenderer.class, remap = false)
+@Mixin(value = NeoRenderer.class,
+       remap = false)
 public abstract class NeoRendererMixin {
     @Inject(method = "render",
             at = @At("HEAD"),

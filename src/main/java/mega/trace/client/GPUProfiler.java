@@ -33,10 +33,15 @@ import mega.trace.common.TracyProfiler;
 import mega.trace.natives.Tracy;
 import org.jetbrains.annotations.NotNull;
 
-import static org.lwjgl.opengl.GL46C.*;
+import static org.lwjgl.opengl.GL46C.GL_QUERY_RESULT;
+import static org.lwjgl.opengl.GL46C.GL_TIMESTAMP;
+import static org.lwjgl.opengl.GL46C.glGenQueries;
+import static org.lwjgl.opengl.GL46C.glGetInteger64;
+import static org.lwjgl.opengl.GL46C.glGetQueryObjectui64;
+import static org.lwjgl.opengl.GL46C.glQueryCounter;
 
 @Lwjgl3Aware
-public final class GPUProfiler implements TracyProfiler{
+public final class GPUProfiler implements TracyProfiler {
     @Getter
     private static final TracyProfiler instance = new GPUProfiler();
 

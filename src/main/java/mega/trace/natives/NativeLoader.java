@@ -51,7 +51,8 @@ public class NativeLoader {
         nativesDir = homeDir.resolve("falsepattern").resolve("natives").resolve(Tags.MOD_ID);
         try {
             Files.createDirectories(nativesDir);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
         val arch = Arch.getCurrent();
         val os = OS.getCurrent();
         val libc = os.libc();
@@ -117,9 +118,9 @@ public class NativeLoader {
                 return Windows;
             } else if (osName.startsWith("Linux") || osName.startsWith("FreeBSD") || osName.startsWith("SunOS") || osName.startsWith("Unix")) {
                 return Linux;
-            // TODO MacOS
-//            } else if (osName.startsWith("Mac OS X") || osName.startsWith("Darwin")) {
-//                return MacOS;
+                // TODO MacOS
+                //            } else if (osName.startsWith("Mac OS X") || osName.startsWith("Darwin")) {
+                //                return MacOS;
             } else {
                 throw new UnsupportedPlatformException("Unsupported OS " + osName);
             }
@@ -127,17 +128,23 @@ public class NativeLoader {
 
         public String getName() {
             switch (this) {
-                case Windows: return "windows";
-                case Linux: return "linux";
-                case MacOS: return "macos";
-                default: throw new AssertionError("Unreachable");
+                case Windows:
+                    return "windows";
+                case Linux:
+                    return "linux";
+                case MacOS:
+                    return "macos";
+                default:
+                    throw new AssertionError("Unreachable");
             }
         }
 
         public LibC libc() {
             switch (this) {
-                case MacOS: return LibC.None;
-                default: return LibC.GNU; // TODO musl
+                case MacOS:
+                    return LibC.None;
+                default:
+                    return LibC.GNU; // TODO musl
             }
         }
     }
@@ -152,7 +159,7 @@ public class NativeLoader {
         final boolean is64Bit;
 
         static Arch getCurrent() throws UnsupportedPlatformException {
-            String  osArch  = System.getProperty("os.arch");
+            String osArch = System.getProperty("os.arch");
             boolean is64Bit = osArch.contains("64") || osArch.startsWith("armv8");
 
             boolean isArm = osArch.startsWith("arm") || osArch.startsWith("aarch64");
@@ -168,26 +175,34 @@ public class NativeLoader {
 
         public String getName() {
             switch (this) {
-                case X86: return "x86";
-                case X64: return "x86_64";
-                case ARM32: return "arm";
-                case ARM64: return "aarch64";
-                default: throw new AssertionError("Unreachable");
+                case X86:
+                    return "x86";
+                case X64:
+                    return "x86_64";
+                case ARM32:
+                    return "arm";
+                case ARM64:
+                    return "aarch64";
+                default:
+                    throw new AssertionError("Unreachable");
             }
         }
     }
 
     private enum LibC {
         GNU,
-//        MUSL, TODO
+        //        MUSL, TODO
         None;
 
         public String getName() {
             switch (this) {
-                case GNU: return "gnu";
-//                case MUSL: return "musl"; TODO
-                case None: return "none";
-                default: throw new AssertionError("Unreachable");
+                case GNU:
+                    return "gnu";
+                //                case MUSL: return "musl"; TODO
+                case None:
+                    return "none";
+                default:
+                    throw new AssertionError("Unreachable");
             }
         }
     }

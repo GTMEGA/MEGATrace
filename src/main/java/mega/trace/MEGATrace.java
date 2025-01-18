@@ -45,8 +45,9 @@ public class MEGATrace {
     }
 
     public static synchronized void initNatives() {
-        if (nativesLoaded)
+        if (nativesLoaded) {
             return;
+        }
 
         Share.log.info("Attempting to load natives");
 
@@ -69,8 +70,9 @@ public class MEGATrace {
             tracyInitThread.join(5_000);
 
             val t = internalErr.get();
-            if (t != null)
+            if (t != null) {
                 throw t;
+            }
         } catch (Throwable t) {
             throw new RuntimeException("Failed to load natives", t);
         }

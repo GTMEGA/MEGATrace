@@ -26,12 +26,15 @@ public class Tracy {
     public static void load() throws UnsupportedPlatformException {
         new NativeLoader().loadNative(Tracy.class, "Tracy");
     }
+
     public static native void init();
+
     public static native void deinit();
 
     public static native void frameMark();
 
     public static native long beginZone(byte[] name, int color);
+
     public static native void endZone(long zone);
 
     public static native void gpuInit(long gpuTime);
@@ -39,6 +42,7 @@ public class Tracy {
     public static native void gpuTimeSync(long gpuTime);
 
     public static native short gpuBeginZone(byte[] name, int color);
+
     public static native short gpuEndZone();
 
     public static native void gpuTime(short queryId, long gpuTime);

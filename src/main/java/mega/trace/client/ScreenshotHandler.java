@@ -33,8 +33,30 @@ import mega.trace.natives.Tracy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.shader.Framebuffer;
 
-
-import static org.lwjgl.opengl.GL46C.*;
+import static org.lwjgl.opengl.GL46C.GL_CLIENT_STORAGE_BIT;
+import static org.lwjgl.opengl.GL46C.GL_COLOR_ATTACHMENT0;
+import static org.lwjgl.opengl.GL46C.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL46C.GL_LINEAR;
+import static org.lwjgl.opengl.GL46C.GL_MAP_READ_BIT;
+import static org.lwjgl.opengl.GL46C.GL_PACK_ALIGNMENT;
+import static org.lwjgl.opengl.GL46C.GL_PIXEL_PACK_BUFFER;
+import static org.lwjgl.opengl.GL46C.GL_READ_ONLY;
+import static org.lwjgl.opengl.GL46C.GL_RGBA;
+import static org.lwjgl.opengl.GL46C.GL_RGBA8;
+import static org.lwjgl.opengl.GL46C.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL46C.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL46C.glBindBuffer;
+import static org.lwjgl.opengl.GL46C.glBlitNamedFramebuffer;
+import static org.lwjgl.opengl.GL46C.glCreateBuffers;
+import static org.lwjgl.opengl.GL46C.glCreateFramebuffers;
+import static org.lwjgl.opengl.GL46C.glCreateTextures;
+import static org.lwjgl.opengl.GL46C.glGetTextureImage;
+import static org.lwjgl.opengl.GL46C.glNamedBufferStorage;
+import static org.lwjgl.opengl.GL46C.glNamedFramebufferTexture;
+import static org.lwjgl.opengl.GL46C.glPixelStorei;
+import static org.lwjgl.opengl.GL46C.glTextureStorage2D;
+import static org.lwjgl.opengl.GL46C.glUnmapNamedBuffer;
+import static org.lwjgl.opengl.GL46C.nglMapNamedBuffer;
 
 @Accessors(fluent = true,
            chain = false)

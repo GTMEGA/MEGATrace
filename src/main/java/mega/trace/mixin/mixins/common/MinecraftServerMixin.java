@@ -22,8 +22,8 @@
 
 package mega.trace.mixin.mixins.common;
 
-import mega.trace.mixin.interfaces.IProfilerMixin;
 import mega.trace.common.CPUProfiler;
+import mega.trace.mixin.interfaces.IProfilerMixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

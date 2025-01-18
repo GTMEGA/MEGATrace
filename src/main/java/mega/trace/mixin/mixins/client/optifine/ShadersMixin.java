@@ -30,7 +30,8 @@ import shadersmod.client.Shaders;
 
 import net.minecraft.client.Minecraft;
 
-@Mixin(value = Shaders.class, remap = false)
+@Mixin(value = Shaders.class,
+       remap = false)
 public abstract class ShadersMixin {
     @Inject(method = "beginWeather",
             at = @At("HEAD"),

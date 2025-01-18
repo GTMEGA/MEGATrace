@@ -34,7 +34,9 @@ import net.minecraft.server.MinecraftServer;
 
 @Mixin(NetHandlerPlayServer.class)
 public abstract class NetHandlerPlayServerMixin {
-    @Shadow @Final private MinecraftServer serverController;
+    @Final
+    @Shadow
+    private MinecraftServer serverController;
 
     @Inject(method = "onNetworkTick",
             at = @At("RETURN"),
