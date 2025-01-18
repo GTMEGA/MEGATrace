@@ -62,8 +62,12 @@ public final class GPUProfiler {
     private static final Stack<GPUSyncQuery> sections = new Stack<>();
 
     public static void startSection(String name) {
+        startSection(name, 0xFF0000);
+    }
+
+    public static void startSection(String name, int color) {
         val section = queryPool.dequeue();
-        section.push("gl_" + name, 0);
+        section.push("gl_" + name, color);
         sections.push(section);
     }
 
