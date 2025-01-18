@@ -49,7 +49,7 @@ public abstract class MinecraftMixin {
     @Inject(method = "<init>",
             at = @At("RETURN"),
             require = 1)
-    private void markProfiler(CallbackInfo ci) {
+    private void postConstructor(CallbackInfo ci) {
         ((IProfilerMixin) mcProfiler).megatrace$cpuProfiler(new CPUProfiler("cl_", 0));
     }
 
@@ -63,8 +63,8 @@ public abstract class MinecraftMixin {
     @Inject(method = "runGameLoop",
             at = @At("HEAD"),
             require = 1)
-    private void startFrame(CallbackInfo ci) {
-        GLAsyncTasks.nextFrame();
+    private void preGameLoop(CallbackInfo ci) {
+        GLAsyncTasks.instance().nextFrame();
         Tracy.frameMark();
         GPUProfiler.timeSync();
     }

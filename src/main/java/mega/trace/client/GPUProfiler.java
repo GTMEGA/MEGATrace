@@ -104,7 +104,7 @@ public final class GPUProfiler implements TracyProfiler{
         void gpuEndZone() {
             glQueryCounter(glQueryPop, GL_TIMESTAMP);
             queryIdPop = Tracy.gpuEndZone();
-            GLAsyncTasks.queueTask(this);
+            GLAsyncTasks.instance().queueTask(this);
         }
 
         @Override

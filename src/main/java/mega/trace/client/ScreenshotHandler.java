@@ -91,7 +91,7 @@ public final class ScreenshotHandler {
 
     public void queueScreenshot() {
         if (!imagePool.isEmpty()) {
-            GLAsyncTasks.queueTask(imagePool.dequeue());
+            GLAsyncTasks.instance().queueTask(imagePool.dequeue());
         }
     }
 

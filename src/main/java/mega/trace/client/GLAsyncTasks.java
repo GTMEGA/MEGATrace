@@ -24,57 +24,87 @@ package mega.trace.client;
 
 import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
-import lombok.experimental.UtilityClass;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.val;
 import me.eigenraven.lwjgl3ify.api.Lwjgl3Aware;
 
 import static org.lwjgl.opengl.GL46C.*;
 
-@UtilityClass
+@Accessors(fluent = true, chain = false)
 public final class GLAsyncTasks {
     private static final int MAX_SYNC_COUNT = 32;
-
     private static final int FUTURE_SYNC_MIN_DELAY = 4;
     private static final int FUTURE_SYNC_MAX_DELAY = 8;
     private static final int PAST_SYNC_DELAY = 8;
 
-    private static final PriorityQueue<GLSyncTaskQueue> syncPool = new ObjectArrayFIFOQueue<>(MAX_SYNC_COUNT);
-    private static final PriorityQueue<GLSyncTaskQueue> futureSync = new ObjectArrayFIFOQueue<>(MAX_SYNC_COUNT);
-    private static final PriorityQueue<GLSyncTaskQueue> pastSync = new ObjectArrayFIFOQueue<>(MAX_SYNC_COUNT);
+    @Getter
+    private static final GLAsyncTasks instance = new GLAsyncTasks(MAX_SYNC_COUNT, FUTURE_SYNC_MIN_DELAY, FUTURE_SYNC_MAX_DELAY, PAST_SYNC_DELAY);
 
-    static {
+    private final int futureSyncMinDelay;
+    private final int futureSyncMaxDelay;
+    private final int pastSyncDelay;
+
+    private final PriorityQueue<GLSyncTaskQueue> syncPool;
+    private final PriorityQueue<GLSyncTaskQueue> futureSync;
+    private final PriorityQueue<GLSyncTaskQueue> pastSync;
+
+    private GLSyncTaskQueue currentSync;
+    private int currentFrame;
+
+    public GLAsyncTasks(int maxSyncCount, int futureSyncMinDelay, int futureSyncMaxDelay, int pastSyncDelay) {
+        this.futureSyncMinDelay = futureSyncMinDelay;
+        this.futureSyncMaxDelay = futureSyncMaxDelay;
+        this.pastSyncDelay = pastSyncDelay;
+
+        this.syncPool = new ObjectArrayFIFOQueue<>(maxSyncCount);
         // Pre-allocate sync objects
-        for (var i = 0; i < MAX_SYNC_COUNT; i++) {
+        for (var i = 0; i < maxSyncCount; i++) {
             syncPool.enqueue(new GLSyncTaskQueue());
         }
+
+        this.futureSync = new ObjectArrayFIFOQueue<>(maxSyncCount);
+        this.pastSync = new ObjectArrayFIFOQueue<>(maxSyncCount);
+
+        this.currentSync = null;
+        this.currentFrame = -1;
     }
 
-    private static GLSyncTaskQueue currentSync = null;
-    private static int currentFrame = -1;
-
-    public static void nextFrame() {
-        currentFrame++;
-        processFutureSyncs();
-        recyclePastSyncs();
+    public void nextFrame() {
         queueCurrentSync();
+        recyclePastSyncs();
+        processFutureSyncs();
     }
 
-    public static void queueTask(GLAsyncTask task) {
+    public void queueTask(GLAsyncTask task) {
         task.start(currentFrame);
         currentSync.queueTask(task);
     }
 
     /**
-     * Processes the future, based on the threshold {@link #FUTURE_SYNC_MIN_DELAY}
+     * Recycles old syncs back into the pool, based on the threshold {@link #pastSyncDelay}
+     * <p>
+     * This is delayed as if done immediately, it may be a blocking operation.
+     */
+    private void recyclePastSyncs() {
+        while (pastSync.size() > pastSyncDelay) {
+            val sync = pastSync.dequeue();
+            sync.reset();
+            syncPool.enqueue(sync);
+        }
+    }
+
+    /**
+     * Processes the future, based on the threshold {@link #futureSyncMinDelay}
      * <p>
      * The threshold is used as a fair guess as to if the tasks would be already done or not.
      * <p>
-     * If the total number of syncs exceeds {@link #FUTURE_SYNC_MAX_DELAY}, the next sync will be a hard sync.
+     * If the total number of syncs exceeds {@link #futureSyncMaxDelay}, the next sync will be a hard sync.
      */
-    private static void processFutureSyncs() {
-        while (futureSync.size() > FUTURE_SYNC_MIN_DELAY) {
+    private void processFutureSyncs() {
+        while (futureSync.size() > futureSyncMinDelay) {
             val task = futureSync.first();
-            val doHardSync = futureSync.size() >= FUTURE_SYNC_MAX_DELAY;
+            val doHardSync = futureSync.size() >= futureSyncMaxDelay;
             if (task.tryRun(doHardSync)) {
                 pastSync.enqueue(futureSync.dequeue());
             } else {
@@ -83,27 +113,15 @@ public final class GLAsyncTasks {
         }
     }
 
-    /**
-     * Recycles old syncs back into the pool, based on the threshold {@link #PAST_SYNC_DELAY}
-     * <p>
-     * This is delayed as if done immediately, it may be a blocking operation.
-     */
-    private static void recyclePastSyncs() {
-        while (pastSync.size() > PAST_SYNC_DELAY) {
-            val sync = pastSync.dequeue();
-            sync.reset();
-            syncPool.enqueue(sync);
-        }
-    }
-
-    private static void queueCurrentSync() {
+    private void queueCurrentSync() {
         currentSync = syncPool.dequeue();
         currentSync.start();
         futureSync.enqueue(currentSync);
+        currentFrame++;
     }
 
     @Lwjgl3Aware
-    private static class GLSyncTaskQueue {
+    private class GLSyncTaskQueue {
         final PriorityQueue<GLAsyncTask> tasks = new ObjectArrayFIFOQueue<>();
 
         long sync = 0L;
