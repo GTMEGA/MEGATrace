@@ -43,7 +43,6 @@ import static org.lwjgl.opengl.GL46C.glGetInteger64;
 import static org.lwjgl.opengl.GL46C.glGetQueryObjectui64;
 import static org.lwjgl.opengl.GL46C.glQueryCounter;
 
-@Lwjgl3Aware
 public final class GPUProfiler implements TracyProfiler {
     @Getter
     private static final TracyProfiler instance = new GPUProfiler();
@@ -98,7 +97,6 @@ public final class GPUProfiler implements TracyProfiler {
         }
     }
 
-    @Lwjgl3Aware
     private class GPUZone implements GLAsyncTask {
         final int glQueryPush = glGenQueries();
         final int glQueryPop = glGenQueries();

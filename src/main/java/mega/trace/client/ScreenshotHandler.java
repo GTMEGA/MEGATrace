@@ -117,7 +117,6 @@ public final class ScreenshotHandler {
         }
     }
 
-    @Lwjgl3Aware
     private class FrameImage implements GLAsyncTask {
         final short width;
         final short height;

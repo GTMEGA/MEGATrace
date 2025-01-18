@@ -126,7 +126,6 @@ public final class GLAsyncTasks {
         currentFrame++;
     }
 
-    @Lwjgl3Aware
     private class GLSyncTaskQueue {
         final PriorityQueue<GLAsyncTask> tasks = new ObjectArrayFIFOQueue<>();
 
