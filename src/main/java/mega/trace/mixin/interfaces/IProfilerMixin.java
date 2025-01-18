@@ -28,4 +28,6 @@ public interface IProfilerMixin {
     void megatrace$cpuProfiler(TracyProfiler cpuProfiler);
 
     void megatrace$gpuProfiler(TracyProfiler gpuProfiler);
+
+    void megatrace$enableGPUProfiler(boolean enable);
 }

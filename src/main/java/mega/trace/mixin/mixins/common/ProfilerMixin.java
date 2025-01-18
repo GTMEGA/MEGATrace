@@ -44,6 +44,9 @@ public abstract class ProfilerMixin implements IProfilerMixin {
     private TracyProfiler megatrace$gpuProfiler = null;
 
     @Unique
+    private boolean megatrace$gpuProfilerEnabled = false;
+
+    @Unique
     @Override
     public void megatrace$cpuProfiler(TracyProfiler cpuProfiler) {
         this.megatrace$cpuProfiler = cpuProfiler;
@@ -62,7 +65,7 @@ public abstract class ProfilerMixin implements IProfilerMixin {
         if (megatrace$cpuProfiler != null) {
             megatrace$cpuProfiler.beginZone(name);
         }
-        if (megatrace$gpuProfiler != null) {
+        if (megatrace$gpuProfilerEnabled && megatrace$gpuProfiler != null) {
             megatrace$gpuProfiler.beginZone(name);
         }
     }
@@ -71,11 +74,16 @@ public abstract class ProfilerMixin implements IProfilerMixin {
             at = @At("HEAD"),
             require = 1)
     private void endSection(CallbackInfo ci) {
-        if (megatrace$gpuProfiler != null) {
+        if (megatrace$gpuProfilerEnabled && megatrace$gpuProfiler != null) {
             megatrace$gpuProfiler.endZone();
         }
         if (megatrace$cpuProfiler != null) {
             megatrace$cpuProfiler.endZone();
         }
+    }
+
+    @Override
+    public void megatrace$enableGPUProfiler(boolean enable) {
+        this.megatrace$gpuProfilerEnabled = enable;
     }
 }

@@ -22,6 +22,8 @@
 
 package mega.trace.mixin.mixins.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import mega.trace.client.GLAsyncTasks;
 import mega.trace.client.GPUProfiler;
 import mega.trace.client.ScreenshotHandler;
@@ -58,6 +60,7 @@ public abstract class MinecraftMixin {
             require = 1)
     private void postGameStart(CallbackInfo ci) {
         ((IProfilerMixin) mcProfiler).megatrace$gpuProfiler(GPUProfiler.instance());
+        ((IProfilerMixin) mcProfiler).megatrace$enableGPUProfiler(true);
     }
 
     @Inject(method = "runGameLoop",
@@ -67,6 +70,19 @@ public abstract class MinecraftMixin {
         GLAsyncTasks.instance().nextFrame();
         Tracy.frameMark();
         GPUProfiler.timeSync();
+    }
+
+    @WrapOperation(method = "runGameLoop",
+                   at = @At(value = "INVOKE",
+                            target = "Lnet/minecraft/client/Minecraft;runTick()V"),
+                   require = 1)
+    private void doNotGPUProfilerRunTick(Minecraft instance, Operation<Void> original) {
+        ((IProfilerMixin)instance.mcProfiler).megatrace$enableGPUProfiler(false);
+        try {
+            original.call(instance);
+        } finally {
+            ((IProfilerMixin) instance.mcProfiler).megatrace$enableGPUProfiler(true);
+        }
     }
 
     @Inject(method = "runGameLoop",
