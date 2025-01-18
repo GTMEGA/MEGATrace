@@ -74,7 +74,7 @@ public abstract class MinecraftMixin {
                      target = "Lnet/minecraft/client/Minecraft;func_147120_f()V"),
             require = 1)
     private void preSwapBuffers(CallbackInfo ci) {
-        ScreenshotHandler.queueScreenshot();
+        ScreenshotHandler.instance().queueScreenshot();
     }
 
     @ModifyConstant(method = "runGameLoop",

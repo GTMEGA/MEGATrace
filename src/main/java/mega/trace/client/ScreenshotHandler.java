@@ -24,112 +24,131 @@ package mega.trace.client;
 
 import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.val;
 import me.eigenraven.lwjgl3ify.api.Lwjgl3Aware;
 import mega.trace.natives.Tracy;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.shader.Framebuffer;
 
 
 import static org.lwjgl.opengl.GL46C.*;
 
+@Accessors(fluent = true,
+           chain = false)
 public final class ScreenshotHandler {
-    private static final PriorityQueue<ScreenshotBuffer> bufferPool = new ObjectArrayFIFOQueue<>(16);
+    // region Image Source
+    public interface FrameImageSource {
+        short width();
 
-    static {
-        for (var i = 0; i < 16; i++) {
-            bufferPool.enqueue(new ScreenshotBuffer());
+        short height();
+
+        int fbo();
+    }
+
+    private static final FrameImageSource MC_FRAMEBUFFER = new FrameImageSource() {
+        @Override
+        public short width() {
+            return (short) mcFb().framebufferWidth;
+        }
+
+        @Override
+        public short height() {
+            return (short) mcFb().framebufferHeight;
+        }
+
+        @Override
+        public int fbo() {
+            return mcFb().framebufferObject;
+        }
+
+        static Framebuffer mcFb() {
+            return Minecraft.getMinecraft().getFramebuffer();
+        }
+    };
+    // endregion
+
+    private static final int IMAGE_POOL_SIZE = 16;
+    private static final short IMAGE_WIDTH = 320;
+    private static final short IMAGE_HEIGHT = 240;
+
+    @Getter
+    private static final ScreenshotHandler instance = new ScreenshotHandler(MC_FRAMEBUFFER, IMAGE_POOL_SIZE, IMAGE_WIDTH, IMAGE_HEIGHT);
+
+    private final FrameImageSource src;
+    private final PriorityQueue<FrameImage> imagePool;
+
+    private ScreenshotHandler(FrameImageSource src, int poolSize, short width, short height) {
+        this.src = src;
+
+        this.imagePool = new ObjectArrayFIFOQueue<>(poolSize);
+        for (var i = 0; i < poolSize; i++) {
+            imagePool.enqueue(new FrameImage(width, height));
         }
     }
 
-    public static void queueScreenshot() {
-        GLAsyncTasks.queueTask(bufferPool.dequeue());
+    public void queueScreenshot() {
+        if (!imagePool.isEmpty()) {
+            GLAsyncTasks.queueTask(imagePool.dequeue());
+        }
     }
 
     @Lwjgl3Aware
-    private static class ScreenshotBuffer implements GLAsyncTask {
-        short srcWidth;
-        short srcHeight;
+    private class FrameImage implements GLAsyncTask {
+        final short width;
+        final short height;
+        final int imageSizeBytes;
 
-        int fbo;
-        int tex;
-        int pbo;
-
-        short texWidth;
-        short texHeight;
-        int pboSizeBytes;
+        final int fbo;
+        final int tex;
+        final int pbo;
 
         int capturedFrame;
 
-        @Override
-        public void start(int currentFrame) {
-            prepare();
-            capture(currentFrame);
-        }
+        FrameImage(short width, short height) {
+            this.width = width;
+            this.height = height;
 
-        @Override
-        public void end(int currentFrame) {
-            submit(currentFrame);
-            bufferPool.enqueue(this);
-        }
+            this.imageSizeBytes = this.width * this.height * 4;
 
-        void prepare() {
-            val mcFb = Minecraft.getMinecraft().getFramebuffer();
-            if (srcWidth == mcFb.framebufferWidth && srcHeight == mcFb.framebufferHeight) {
-                return;
-            }
+            this.fbo = glCreateFramebuffers();
+            this.tex = glCreateTextures(GL_TEXTURE_2D);
+            this.pbo = glCreateBuffers();
 
-            srcWidth = (short) mcFb.framebufferWidth;
-            srcHeight = (short) mcFb.framebufferHeight;
-
-            // TODO: Dynamic?
-            texWidth = 320;
-            texHeight = 240;
-            pboSizeBytes = texWidth * texHeight * 4;
-
-            if (fbo != 0) {
-                glDeleteFramebuffers(fbo);
-            }
-            if (tex != 0) {
-                glDeleteTextures(tex);
-            }
-            if (pbo != 0) {
-                glDeleteBuffers(pbo);
-            }
-
-            fbo = glCreateFramebuffers();
-            tex = glCreateTextures(GL_TEXTURE_2D);
-            pbo = glCreateBuffers();
-
-            glTextureStorage2D(tex, 1, GL_RGBA8, texWidth, texHeight);
+            glTextureStorage2D(tex, 1, GL_RGBA8, this.width, this.height);
             glNamedFramebufferTexture(fbo, GL_COLOR_ATTACHMENT0, tex, 0);
             // Client-side storage should mean the actual buffer is CPU-Side, but it's a hint not a promise.
-            glNamedBufferStorage(pbo, pboSizeBytes, GL_MAP_READ_BIT | GL_CLIENT_STORAGE_BIT);
+            glNamedBufferStorage(pbo, this.imageSizeBytes, GL_MAP_READ_BIT | GL_CLIENT_STORAGE_BIT);
+
+            this.capturedFrame = -1;
         }
 
-        void capture(int currentFrame) {
-            val mcFb = Minecraft.getMinecraft().getFramebuffer();
-
+        @Override
+        public void start(int currentFrame) {
             // @formatter:off
-            glBlitNamedFramebuffer(mcFb.framebufferObject, fbo,
-                                   0, 0, srcWidth - 1, srcHeight - 1,
-                                   0, 0, texWidth - 1, texHeight - 1,
+            glBlitNamedFramebuffer(src.fbo(), fbo,
+                                   0, 0, src.width() - 1, src.height() - 1,
+                                   0, 0, width - 1, height - 1,
                                    GL_COLOR_BUFFER_BIT, GL_LINEAR);
             // @formatter:on
 
             glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
             glPixelStorei(GL_PACK_ALIGNMENT, 4);
-            glGetTextureImage(tex, 0, GL_RGBA, GL_UNSIGNED_BYTE, pboSizeBytes, 0L);
+            glGetTextureImage(tex, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageSizeBytes, 0L);
             glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-            capturedFrame = currentFrame;
+            this.capturedFrame = currentFrame;
         }
 
-        void submit(int currentFrame) {
+        @Override
+        public void end(int currentFrame) {
             val image = nglMapNamedBuffer(pbo, GL_READ_ONLY);
             val offset = (byte) (currentFrame - capturedFrame);
-            Tracy.frameImage(offset, image, texWidth, texHeight);
+            Tracy.frameImage(offset, image, width, height);
             glUnmapNamedBuffer(pbo);
+            imagePool.enqueue(this);
         }
     }
 }
