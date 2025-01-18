@@ -32,6 +32,12 @@ minecraft_fp {
     }
 }
 
+tasks.jar {
+    manifest {
+        attributes["Lwjgl3ify-Aware"] = true
+    }
+}
+
 repositories {
     exclusive(mavenpattern(), "com.falsepattern", "makamys")
     exclusive(mavenCentral(), "it.unimi.dsi")
