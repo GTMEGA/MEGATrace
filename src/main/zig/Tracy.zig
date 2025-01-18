@@ -43,16 +43,31 @@ var name_intern_pool: intern_pool.StringInternPool = undefined;
 var source_location_pool: SourceLocationInternPool = undefined;
 var gpu_query_id_counter =  std.atomic.Value(u16).init(0);
 
-const SourceLocationInternPool = intern_pool.InternPool([:0]const u8, *const tracy.TracySourceLocationData, struct {
-    pub const HashMapContext = std.hash_map.StringContext;
-    pub inline fn cloneKey(key: [:0]const u8, _: std.mem.Allocator) ![:0]const u8 {
+const SourceLocationKey = struct {
+    name: [:0]const u8,
+    color: u32
+};
+const SourceLocationInternPool = intern_pool.InternPool(SourceLocationKey, *const tracy.TracySourceLocationData, struct {
+    pub const HashMapContext = struct {
+        pub fn hash(_: @This(), s: SourceLocationKey) u64 {
+            var hasher = std.hash.Wyhash.init(0);
+            hasher.update(s.name);
+            hasher.update(std.mem.asBytes(&s.color));
+            return hasher.final();
+        }
+
+        pub fn eql(_: @This(), a: SourceLocationKey, b: SourceLocationKey) bool {
+            return std.mem.eql(u8, a.name, b.name) and a.color == b.color;
+        }
+    };
+    pub inline fn cloneKey(key: SourceLocationKey, _: std.mem.Allocator) !SourceLocationKey {
         //Already interned
         return key;
     }
 
-    pub inline fn cloneValue(_: [:0]const u8, clonedKey: [:0]const u8, value: *const tracy.TracySourceLocationData, allocator: std.mem.Allocator) !*const tracy.TracySourceLocationData {
+    pub inline fn cloneValue(_: SourceLocationKey, clonedKey: SourceLocationKey, value: *const tracy.TracySourceLocationData, allocator: std.mem.Allocator) !*const tracy.TracySourceLocationData {
         const new = try allocator.create(tracy.TracySourceLocationData);
-        new.name = clonedKey;
+        new.name = clonedKey.name;
         new.function = default_function;
         new.file = default_file;
         new.line = default_line;
@@ -106,7 +121,11 @@ pub fn critical_beginZone(jNameL: jni.jint, jName: [*c]jni.jbyte, jColor: jni.ji
 
 fn beginZone(name: [:0]const u8, color: u32) !u64 {
     const interned_name = try name_intern_pool.intern(name, name);
-    const source = try source_location_pool.intern(interned_name, &tracy.TracySourceLocationData{
+    const key = SourceLocationKey{
+        .name = interned_name,
+        .color = color
+    };
+    const source = try source_location_pool.intern(key, &tracy.TracySourceLocationData{
         .name = interned_name,
         .function = default_function,
         .file = default_file,
