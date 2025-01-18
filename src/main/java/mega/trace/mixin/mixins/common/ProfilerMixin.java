@@ -22,17 +22,23 @@
 
 package mega.trace.mixin.mixins.common;
 
+import lombok.val;
+import mega.trace.common.CPUProfiler;
 import mega.trace.common.TracyProfiler;
+import mega.trace.common.colors.Lch;
+import mega.trace.common.colors.Palette;
 import mega.trace.mixin.interfaces.IProfilerMixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.profiler.Profiler;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 @Mixin(Profiler.class)
 public abstract class ProfilerMixin implements IProfilerMixin {
@@ -80,6 +86,28 @@ public abstract class ProfilerMixin implements IProfilerMixin {
         if (megatrace$cpuProfiler != null) {
             megatrace$cpuProfiler.endZone();
         }
+    }
+
+    @Inject(method = "getProfilingData",
+            at = @At("HEAD"),
+            cancellable = true,
+            require = 1)
+    private void apiHook(String profilerName, CallbackInfoReturnable<List<Profiler.Result>> cir) {
+        if (profilerName == null)
+            return;
+        if (!profilerName.startsWith("__MEGATRACE__:"))
+            return;
+        // TODO: Custom colors?
+        val color = new Palette(
+                new Lch(
+                        0.871132f, 0.09365219f, 4.5872717f
+                ),
+                0.0018133742f, 0.18914041f
+        );
+
+        val prefix = profilerName.substring("__MEGATRACE__:".length());
+        this.megatrace$cpuProfiler = new CPUProfiler(prefix, color);
+        cir.setReturnValue(null);
     }
 
     @Override
