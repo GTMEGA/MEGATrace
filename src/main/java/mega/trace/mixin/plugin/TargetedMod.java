@@ -35,6 +35,7 @@ import static com.falsepattern.lib.mixin.ITargetedMod.PredicateHelpers.contains;
 @RequiredArgsConstructor
 public enum TargetedMod implements ITargetedMod {
     NEODYMIUM("Neodymium", false, contains("neodymium-")),
+    OPTIFINE("OptiFine", false, contains("optifine")),
     ;
 
     @Getter
