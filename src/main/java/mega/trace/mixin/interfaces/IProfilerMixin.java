@@ -20,30 +20,12 @@
  * along with MEGATrace.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package mega.trace.mixin.mixins.common;
+package mega.trace.mixin.interfaces;
 
-import mega.trace.mixin.interfaces.IProfilerMixin;
-import mega.trace.common.CPUProfiler;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import mega.trace.common.TracyProfiler;
 
-import net.minecraft.profiler.Profiler;
-import net.minecraft.server.MinecraftServer;
+public interface IProfilerMixin {
+    void megatrace$cpuProfiler(TracyProfiler cpuProfiler);
 
-@Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin {
-    @Final
-    @Shadow
-    public Profiler theProfiler;
-
-    @Inject(method = "<init>",
-            at = @At("RETURN"),
-            require = 1)
-    private void onInit(CallbackInfo ci) {
-        ((IProfilerMixin) theProfiler).megatrace$cpuProfiler(new CPUProfiler("sv_", 0));
-    }
+    void megatrace$gpuProfiler(TracyProfiler gpuProfiler);
 }

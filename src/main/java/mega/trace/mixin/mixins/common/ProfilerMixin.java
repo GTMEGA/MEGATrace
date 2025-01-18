@@ -22,38 +22,48 @@
 
 package mega.trace.mixin.mixins.common;
 
-import mega.trace.IProfiler;
-import mega.trace.MEGATrace;
-import mega.trace.client.GPUProfiler;
-import mega.trace.natives.Tracy;
+import mega.trace.mixin.interfaces.IProfilerMixin;
+import mega.trace.common.TracyProfiler;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.profiler.Profiler;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Stack;
+import javax.annotation.Nullable;
 
 @Mixin(Profiler.class)
-public abstract class ProfilerMixin implements IProfiler {
-    private Stack<Long> sections = new Stack<>();
-    private String name = "";
-    private boolean includeGpu = false;
+public abstract class ProfilerMixin implements IProfilerMixin {
+    @Unique
+    @Nullable
+    private TracyProfiler megatrace$cpuProfiler = null;
+    @Unique
+    @Nullable
+    private TracyProfiler megatrace$gpuProfiler = null;
 
-    static {
-        // TODO: This is here because sometimes the profiler stuff gets called early
-        MEGATrace.initNatives();
+    @Unique
+    @Override
+    public void megatrace$cpuProfiler(TracyProfiler cpuProfiler) {
+        this.megatrace$cpuProfiler = cpuProfiler;
+    }
+
+    @Unique
+    @Override
+    public void megatrace$gpuProfiler(TracyProfiler gpuProfiler) {
+        this.megatrace$gpuProfiler = gpuProfiler;
     }
 
     @Inject(method = "startSection",
             at = @At("HEAD"),
             require = 1)
     private void startSection(String name, CallbackInfo ci) {
-        sections.push(Tracy.beginZone((this.name + name).getBytes(StandardCharsets.UTF_8), 0));
-        if (includeGpu) {
-            GPUProfiler.startSection(this.name + name, 0x46c26b);
+        if (megatrace$cpuProfiler != null) {
+            megatrace$cpuProfiler.beginZone(name);
+        }
+        if (megatrace$gpuProfiler != null) {
+            megatrace$gpuProfiler.beginZone(name);
         }
     }
 
@@ -61,21 +71,11 @@ public abstract class ProfilerMixin implements IProfiler {
             at = @At("HEAD"),
             require = 1)
     private void endSection(CallbackInfo ci) {
-        if (!sections.isEmpty()) {
-            Tracy.endZone(sections.pop());
-            if (includeGpu) {
-                GPUProfiler.endSection();
-            }
+        if (megatrace$gpuProfiler != null) {
+            megatrace$gpuProfiler.endZone();
         }
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public void includeGpu() {
-        this.includeGpu = true;
+        if (megatrace$cpuProfiler != null) {
+            megatrace$cpuProfiler.endZone();
+        }
     }
 }

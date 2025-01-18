@@ -44,20 +44,16 @@ public abstract class NeoRendererMixin {
         if (pass == 0) {
             if (Compat.isShadersShadowPass()) {
                 profiler.startSection("nd_shadow_0");
-                GPUProfiler.startSection("nd_shadow_0");
             } else {
                 profiler.startSection("nd_terrain_0");
-                GPUProfiler.startSection("nd_terrain_0");
             }
         }
 
         if (pass == 1) {
             if (Compat.isShadersShadowPass()) {
                 profiler.startSection("nd_shadow_1");
-                GPUProfiler.startSection("nd_shadow_1");
             } else {
                 profiler.startSection("nd_terrain_1");
-                GPUProfiler.startSection("nd_terrain_1");
             }
         }
     }
@@ -66,7 +62,6 @@ public abstract class NeoRendererMixin {
             at = @At("RETURN"),
             require = 1)
     private void postRender(int pass, double alpha, CallbackInfoReturnable<Integer> cir) {
-        GPUProfiler.endSection();
         Minecraft.getMinecraft().mcProfiler.endSection();
     }
 }

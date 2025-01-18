@@ -22,10 +22,11 @@
 
 package mega.trace.mixin.mixins.client;
 
-import mega.trace.IProfiler;
+import mega.trace.mixin.interfaces.IProfilerMixin;
 import mega.trace.client.GLAsyncTasks;
 import mega.trace.client.GPUProfiler;
 import mega.trace.client.ScreenshotHandler;
+import mega.trace.common.CPUProfiler;
 import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,21 +42,22 @@ import net.minecraft.profiler.Profiler;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
-    @Shadow @Final public Profiler mcProfiler;
+    @Final
+    @Shadow
+    public Profiler mcProfiler;
 
     @Inject(method = "<init>",
             at = @At("RETURN"),
             require = 1)
     private void markProfiler(CallbackInfo ci) {
-        ((IProfiler)mcProfiler).setName("cl_");
-        ((IProfiler)mcProfiler).includeGpu();
+        ((IProfilerMixin) mcProfiler).megatrace$cpuProfiler(new CPUProfiler("cl_", 0));
     }
 
     @Inject(method = "startGame",
             at = @At("RETURN"),
             require = 1)
     private void postGameStart(CallbackInfo ci) {
-        GPUProfiler.init();
+        ((IProfilerMixin) mcProfiler).megatrace$gpuProfiler(GPUProfiler.instance());
     }
 
     @Inject(method = "runGameLoop",
@@ -65,31 +67,6 @@ public abstract class MinecraftMixin {
         GLAsyncTasks.nextFrame();
         Tracy.frameMark();
         GPUProfiler.timeSync();
-        GPUProfiler.startSection("root");
-    }
-
-//    @Inject(method = "runGameLoop",
-//            at = @At(value = "CONSTANT",
-//                     args = "stringValue=preRenderErrors"),
-//            require = 1)
-//    private void preRenderErrors(CallbackInfo ci) {
-//        GPUProfiler.endSection();
-//        GPUProfiler.startSection("render");
-//    }
-
-//    @Redirect(method = "runGameLoop",
-//              at = @At(value = "INVOKE",
-//                       target = "Lorg/lwjgl/opengl/GL11;glFlush()V"),
-//              require = 1)
-//    private void noFlush() {
-//
-//    }
-
-    @Inject(method = "runGameLoop",
-            at = @At("RETURN"),
-            require = 1)
-    private void endFrame(CallbackInfo ci) {
-//        GPUProfiler.endSection();
     }
 
     @Inject(method = "runGameLoop",
@@ -97,10 +74,7 @@ public abstract class MinecraftMixin {
                      target = "Lnet/minecraft/client/Minecraft;func_147120_f()V"),
             require = 1)
     private void preSwapBuffers(CallbackInfo ci) {
-        GPUProfiler.startSection("queue_screenshot");
         ScreenshotHandler.queueScreenshot();
-        GPUProfiler.endSection();
-        GPUProfiler.endSection();
     }
 
     @ModifyConstant(method = "runGameLoop",

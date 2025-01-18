@@ -22,7 +22,6 @@
 
 package mega.trace.mixin.mixins.client.optifine;
 
-import mega.trace.client.GPUProfiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,14 +37,12 @@ public abstract class ShadersMixin {
             require = 1)
     private static void preRenderWeather(CallbackInfo ci) {
         Minecraft.getMinecraft().mcProfiler.startSection("of_shaderWeather");
-        GPUProfiler.startSection("of_shaderWeather");
     }
 
     @Inject(method = "endWeather",
             at = @At("RETURN"),
             require = 1)
     private static void postRenderWeather(CallbackInfo ci) {
-        GPUProfiler.endSection();
         Minecraft.getMinecraft().mcProfiler.endSection();
     }
 
@@ -54,14 +51,12 @@ public abstract class ShadersMixin {
             require = 1)
     private static void preRenderDeferred(CallbackInfo ci) {
         Minecraft.getMinecraft().mcProfiler.startSection("of_shaderDeferred");
-        GPUProfiler.startSection("of_shaderDeferred");
     }
 
     @Inject(method = "renderDeferred",
             at = @At("RETURN"),
             require = 1)
     private static void postRenderDeferred(CallbackInfo ci) {
-        GPUProfiler.endSection();
         Minecraft.getMinecraft().mcProfiler.endSection();
     }
 
@@ -70,14 +65,12 @@ public abstract class ShadersMixin {
             require = 1)
     private static void preRenderComposite(CallbackInfo ci) {
         Minecraft.getMinecraft().mcProfiler.startSection("of_shaderComposite");
-        GPUProfiler.startSection("of_shaderComposite");
     }
 
     @Inject(method = "renderCompositeFinal",
             at = @At("RETURN"),
             require = 1)
     private static void postRenderComposite(CallbackInfo ci) {
-        GPUProfiler.endSection();
         Minecraft.getMinecraft().mcProfiler.endSection();
     }
 
@@ -86,14 +79,12 @@ public abstract class ShadersMixin {
             require = 1)
     private static void preRenderFinal(CallbackInfo ci) {
         Minecraft.getMinecraft().mcProfiler.startSection("of_shaderFinal");
-        GPUProfiler.startSection("of_shaderFinal");
     }
 
     @Inject(method = "renderFinal",
             at = @At("RETURN"),
             require = 1)
     private static void postRender(CallbackInfo ci) {
-        GPUProfiler.endSection();
         Minecraft.getMinecraft().mcProfiler.endSection();
     }
 }

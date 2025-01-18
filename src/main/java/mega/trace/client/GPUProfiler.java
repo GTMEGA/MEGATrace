@@ -23,74 +23,85 @@
 package mega.trace.client;
 
 import it.unimi.dsi.fastutil.PriorityQueue;
+import it.unimi.dsi.fastutil.Stack;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
-import lombok.experimental.UtilityClass;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.Getter;
 import lombok.val;
 import me.eigenraven.lwjgl3ify.api.Lwjgl3Aware;
+import mega.trace.common.TracyProfiler;
 import mega.trace.natives.Tracy;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Stack;
+import org.jetbrains.annotations.NotNull;
 
 import static org.lwjgl.opengl.GL46C.*;
 
 @Lwjgl3Aware
-@UtilityClass
-public final class GPUProfiler {
-    private static final PriorityQueue<GPUSyncQuery> queryPool = new ObjectArrayFIFOQueue<>(16384);
+public final class GPUProfiler implements TracyProfiler{
+    @Getter
+    private static final TracyProfiler instance = new GPUProfiler();
 
-    public static void init() {
+    private static int lastTimeSync = 0;
+
+    private final PriorityQueue<GPUZone> zonePool;
+    private final Stack<GPUZone> zones = new ObjectArrayList<>();
+
+    private GPUProfiler() {
+        this.zonePool = new ObjectArrayFIFOQueue<>(16384);
         for (var i = 0; i < 16384; i++) {
-            queryPool.enqueue(new GPUSyncQuery());
+            zonePool.enqueue(new GPUZone());
         }
 
         val gpuTime = glGetInteger64(GL_TIMESTAMP);
         Tracy.gpuInit(gpuTime);
     }
 
-    private static int lastSync = 0;
-
     public static void timeSync() {
-        lastSync++;
-        if (lastSync > 100) {
+        lastTimeSync++;
+        if (lastTimeSync > 100) {
             val gpuTime = glGetInteger64(GL_TIMESTAMP);
             Tracy.gpuTimeSync(gpuTime);
-            lastSync = 0;
+            lastTimeSync = 0;
         }
     }
 
-    private static final Stack<GPUSyncQuery> sections = new Stack<>();
-
-    public static void startSection(String name) {
-        startSection(name, 0xFF0000);
+    @Override
+    public int color() {
+        return 0;
     }
 
-    public static void startSection(String name, int color) {
-        val section = queryPool.dequeue();
-        section.push("gl_" + name, color);
-        sections.push(section);
+    @Override
+    public String prefix() {
+        return "gl_";
     }
 
-    public static void endSection() {
-        if (!sections.isEmpty()) {
-            sections.pop().pop();
+    @Override
+    public void beginZone(byte @NotNull [] name, int color) {
+        val zone = zonePool.dequeue();
+        zone.gpuBeginZone(name, color);
+        zones.push(zone);
+    }
+
+    @Override
+    public void endZone() {
+        if (!zones.isEmpty()) {
+            zones.pop().gpuEndZone();
         }
     }
 
     @Lwjgl3Aware
-    private static class GPUSyncQuery implements GLAsyncTask {
+    private class GPUZone implements GLAsyncTask {
         final int glQueryPush = glGenQueries();
         final int glQueryPop = glGenQueries();
 
         short queryIdPush;
         short queryIdPop;
 
-        void push(String name, int color) {
-            queryIdPush = Tracy.gpuBeginZone(name.getBytes(StandardCharsets.UTF_8), color);
+        void gpuBeginZone(byte[] name, int color) {
+            queryIdPush = Tracy.gpuBeginZone(name, color);
             glQueryCounter(glQueryPush, GL_TIMESTAMP);
         }
 
-        void pop() {
+        void gpuEndZone() {
             glQueryCounter(glQueryPop, GL_TIMESTAMP);
             queryIdPop = Tracy.gpuEndZone();
             GLAsyncTasks.queueTask(this);
@@ -104,7 +115,7 @@ public final class GPUProfiler {
             Tracy.gpuTime(queryIdPush, gpuTimePush);
             Tracy.gpuTime(queryIdPop, gpuTimePop);
 
-            queryPool.enqueue(this);
+            zonePool.enqueue(this);
         }
     }
 }

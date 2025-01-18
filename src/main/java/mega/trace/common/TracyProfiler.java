@@ -20,9 +20,26 @@
  * along with MEGATrace.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package mega.trace;
+package mega.trace.common;
 
-public interface IProfiler {
-    void setName(String name);
-    void includeGpu();
+import org.jetbrains.annotations.NotNull;
+
+import java.nio.charset.StandardCharsets;
+
+public interface TracyProfiler {
+    int color();
+
+    String prefix();
+
+    default void beginZone(@NotNull String name) {
+        beginZone(name, color());
+    }
+
+    default void beginZone(@NotNull String name, int color) {
+        beginZone((prefix() + name).getBytes(StandardCharsets.UTF_8), color);
+    }
+
+    void beginZone(byte @NotNull [] name, int color);
+
+    void endZone();
 }
