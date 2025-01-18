@@ -23,6 +23,8 @@
 package mega.trace.mixin.mixins.common;
 
 import mega.trace.common.CPUProfiler;
+import mega.trace.common.colors.Lch;
+import mega.trace.common.colors.Palette;
 import mega.trace.mixin.interfaces.IProfilerMixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,6 +46,14 @@ public abstract class MinecraftServerMixin {
             at = @At("RETURN"),
             require = 1)
     private void onInit(CallbackInfo ci) {
-        ((IProfilerMixin) theProfiler).megatrace$cpuProfiler(new CPUProfiler("sv_", 0));
+        ((IProfilerMixin) theProfiler).megatrace$cpuProfiler(new CPUProfiler(
+                "sv_",
+                new Palette(
+                        new Lch(
+                                0.8866515f, 0.06801123f, 6.1798873f
+                        ),
+                        0.001071261f, 0.18384407f
+                )
+        ));
     }
 }

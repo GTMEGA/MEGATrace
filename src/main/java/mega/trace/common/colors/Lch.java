@@ -20,20 +20,14 @@
  * along with MEGATrace.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package mega.trace.common;
+package mega.trace.common.colors;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.charset.StandardCharsets;
-
-public interface TracyProfiler {
-    String prefix();
-
-    default void beginZone(@NotNull String name) {
-        beginZone((prefix() + name).getBytes(StandardCharsets.UTF_8));
+public record Lch(float L, float C, float h) {
+    public static Lch fromLab(Lab lab) {
+        return fromLab(lab.L(), lab.a(), lab.b());
     }
 
-    void beginZone(byte @NotNull [] name);
-
-    void endZone();
+    public static Lch fromLab(float L, float a, float b) {
+        return new Lch(L, (float) Math.sqrt(a * a + b * b), (float) Math.atan2(b, a));
+    }
 }

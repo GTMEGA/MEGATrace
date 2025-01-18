@@ -28,6 +28,8 @@ import mega.trace.client.GLAsyncTasks;
 import mega.trace.client.GPUProfiler;
 import mega.trace.client.ScreenshotHandler;
 import mega.trace.common.CPUProfiler;
+import mega.trace.common.colors.Lch;
+import mega.trace.common.colors.Palette;
 import mega.trace.mixin.interfaces.IProfilerMixin;
 import mega.trace.natives.Tracy;
 import org.spongepowered.asm.mixin.Final;
@@ -52,7 +54,12 @@ public abstract class MinecraftMixin {
             at = @At("RETURN"),
             require = 1)
     private void postConstructor(CallbackInfo ci) {
-        ((IProfilerMixin) mcProfiler).megatrace$cpuProfiler(new CPUProfiler("cl_", 0));
+        ((IProfilerMixin) mcProfiler).megatrace$cpuProfiler(new CPUProfiler("cl_", new Palette(
+                new Lch(
+                        0.871132f, 0.09365219f, 4.5872717f
+                ),
+                0.0018133742f, 0.18914041f
+        )));
     }
 
     @Inject(method = "startGame",

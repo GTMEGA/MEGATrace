@@ -22,13 +22,15 @@
 
 package mega.trace.common;
 
+import it.unimi.dsi.fastutil.longs.AbstractLongList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongStack;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import mega.trace.MEGATrace;
+import mega.trace.common.colors.Palette;
+import mega.trace.common.colors.Rgb;
 import mega.trace.natives.Tracy;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,14 +45,14 @@ public final class CPUProfiler implements TracyProfiler {
     }
 
     @Getter(AccessLevel.NONE)
-    private final LongStack zones = new LongArrayList();
+    private final AbstractLongList zones = new LongArrayList();
 
     private final String prefix;
-    private final int color;
+    private final Palette color;
 
     @Override
-    public void beginZone(byte @NotNull [] name, int color) {
-        zones.push(Tracy.beginZone(name, color));
+    public void beginZone(byte @NotNull [] name) {
+        zones.push(Tracy.beginZone(name, Rgb.fromPalette(color, zones.size()).toArgbInt()));
     }
 
     @Override

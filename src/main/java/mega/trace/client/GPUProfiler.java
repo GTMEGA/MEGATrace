@@ -23,13 +23,16 @@
 package mega.trace.client;
 
 import it.unimi.dsi.fastutil.PriorityQueue;
-import it.unimi.dsi.fastutil.Stack;
+import it.unimi.dsi.fastutil.objects.AbstractObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.Getter;
 import lombok.val;
 import me.eigenraven.lwjgl3ify.api.Lwjgl3Aware;
 import mega.trace.common.TracyProfiler;
+import mega.trace.common.colors.Lch;
+import mega.trace.common.colors.Palette;
+import mega.trace.common.colors.Rgb;
 import mega.trace.natives.Tracy;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,7 +51,7 @@ public final class GPUProfiler implements TracyProfiler {
     private static int lastTimeSync = 0;
 
     private final PriorityQueue<GPUZone> zonePool;
-    private final Stack<GPUZone> zones = new ObjectArrayList<>();
+    private final AbstractObjectList<GPUZone> zones = new ObjectArrayList<>();
 
     private GPUProfiler() {
         this.zonePool = new ObjectArrayFIFOQueue<>(16384);
@@ -69,10 +72,11 @@ public final class GPUProfiler implements TracyProfiler {
         }
     }
 
-    @Override
-    public int color() {
-        return 0;
-    }
+    //L: 0.7460972 C: 0.0931054 H: 3.8307996 sL: 0.0018235666 sH: 0.2772051
+    private final Palette palette = new Palette(
+            new Lch(0.7460972f, 0.093105f, 3.8307996f),
+            0.0018235666f, 0.2772051f
+    );
 
     @Override
     public String prefix() {
@@ -80,9 +84,10 @@ public final class GPUProfiler implements TracyProfiler {
     }
 
     @Override
-    public void beginZone(byte @NotNull [] name, int color) {
+    public void beginZone(byte @NotNull [] name) {
         val zone = zonePool.dequeue();
-        zone.gpuBeginZone(name, color);
+        // TODO palette
+        zone.gpuBeginZone(name, Rgb.fromPalette(palette, zones.size()).toArgbInt());
         zones.push(zone);
     }
 
