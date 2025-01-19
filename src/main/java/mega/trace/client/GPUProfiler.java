@@ -116,7 +116,7 @@ public final class GPUProfiler implements TracyProfiler {
         }
 
         @Override
-        public void end() {
+        public void end(int currentFrame) {
             val gpuTimePush = glGetQueryObjectui64(glQueryPush, GL_QUERY_RESULT);
             val gpuTimePop = glGetQueryObjectui64(glQueryPop, GL_QUERY_RESULT);
 

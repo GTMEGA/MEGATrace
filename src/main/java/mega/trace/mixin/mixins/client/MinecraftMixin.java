@@ -66,6 +66,7 @@ public abstract class MinecraftMixin {
             at = @At("RETURN"),
             require = 1)
     private void postGameStart(CallbackInfo ci) {
+        GLAsyncTasks.init();
         ((IProfilerMixin) mcProfiler).megatrace$gpuProfiler(GPUProfiler.instance());
         ((IProfilerMixin) mcProfiler).megatrace$enableGPUProfiler(true);
     }
@@ -74,8 +75,7 @@ public abstract class MinecraftMixin {
             at = @At("HEAD"),
             require = 1)
     private void preGameLoop(CallbackInfo ci) {
-        GLAsyncTasks.instance().nextFrame();
-        Tracy.frameMark();
+        GLAsyncTasks.instance().preRender();
         GPUProfiler.timeSync();
     }
 
@@ -98,6 +98,8 @@ public abstract class MinecraftMixin {
             require = 1)
     private void preSwapBuffers(CallbackInfo ci) {
         ScreenshotHandler.instance().queueScreenshot();
+        GLAsyncTasks.instance().postRender();
+        Tracy.frameMark();
     }
 
     @ModifyConstant(method = "runGameLoop",

@@ -27,7 +27,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.val;
-import me.eigenraven.lwjgl3ify.api.Lwjgl3Aware;
 
 import static org.lwjgl.opengl.GL46C.GL_SYNC_FLUSH_COMMANDS_BIT;
 import static org.lwjgl.opengl.GL46C.GL_SYNC_GPU_COMMANDS_COMPLETE;
@@ -40,12 +39,12 @@ import static org.lwjgl.opengl.GL46C.glFenceSync;
            chain = false)
 public final class GLAsyncTasks {
     private static final int MAX_SYNC_COUNT = 32;
-    private static final int FUTURE_SYNC_MIN_DELAY = 4;
+    private static final int FUTURE_SYNC_MIN_DELAY = 0;
     private static final int FUTURE_SYNC_MAX_DELAY = 8;
     private static final int PAST_SYNC_DELAY = 8;
 
     @Getter
-    private static final GLAsyncTasks instance = new GLAsyncTasks(MAX_SYNC_COUNT, FUTURE_SYNC_MIN_DELAY, FUTURE_SYNC_MAX_DELAY, PAST_SYNC_DELAY);
+    private static GLAsyncTasks instance;
 
     private final int futureSyncMinDelay;
     private final int futureSyncMaxDelay;
@@ -72,43 +71,22 @@ public final class GLAsyncTasks {
         this.futureSync = new ObjectArrayFIFOQueue<>(maxSyncCount);
         this.pastSync = new ObjectArrayFIFOQueue<>(maxSyncCount);
 
-        this.currentSync = null;
-        this.currentFrame = -1;
+        this.currentSync = syncPool.dequeue();
+        this.currentFrame = 0;
     }
 
-    public void nextFrame() {
-        queueCurrentSync();
-        recyclePastSyncs();
-        processFutureSyncs();
-    }
-
-    public void queueTask(GLAsyncTask task) {
-        task.start(currentFrame);
-        currentSync.queueTask(task);
-    }
-
-    /**
-     * Recycles old syncs back into the pool, based on the threshold {@link #pastSyncDelay}
-     * <p>
-     * This is delayed as if done immediately, it may be a blocking operation.
-     */
-    private void recyclePastSyncs() {
-        while (pastSync.size() > pastSyncDelay) {
-            val sync = pastSync.dequeue();
-            sync.reset();
-            syncPool.enqueue(sync);
+    public static void init() {
+        if (instance == null) {
+            instance = new GLAsyncTasks(MAX_SYNC_COUNT, FUTURE_SYNC_MIN_DELAY, FUTURE_SYNC_MAX_DELAY, PAST_SYNC_DELAY);
         }
     }
 
-    /**
-     * Processes the future, based on the threshold {@link #futureSyncMinDelay}
-     * <p>
-     * The threshold is used as a fair guess as to if the tasks would be already done or not.
-     * <p>
-     * If the total number of syncs exceeds {@link #futureSyncMaxDelay}, the next sync will be a hard sync.
-     */
-    private void processFutureSyncs() {
-        while (futureSync.size() > futureSyncMinDelay) {
+    public void queueTask(GLAsyncTask task) {
+        currentSync.queueTask(task);
+    }
+
+    public void preRender() {
+        while(futureSync.size() > futureSyncMinDelay) {
             val task = futureSync.first();
             val doHardSync = futureSync.size() >= futureSyncMaxDelay;
             if (task.tryRun(doHardSync)) {
@@ -117,12 +95,18 @@ public final class GLAsyncTasks {
                 break;
             }
         }
+
+        while (pastSync.size() > pastSyncDelay) {
+            val sync = pastSync.dequeue();
+            sync.reset();
+            syncPool.enqueue(sync);
+        }
     }
 
-    private void queueCurrentSync() {
-        currentSync = syncPool.dequeue();
-        currentSync.start();
+    public void postRender() {
+        currentSync.postRender();
         futureSync.enqueue(currentSync);
+        currentSync = syncPool.dequeue();
         currentFrame++;
     }
 
@@ -131,12 +115,13 @@ public final class GLAsyncTasks {
 
         long sync = 0L;
 
-        void start() {
-            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        void queueTask(GLAsyncTask task) {
+            task.start(currentFrame);
+            tasks.enqueue(task);
         }
 
-        void queueTask(GLAsyncTask task) {
-            tasks.enqueue(task);
+        void postRender() {
+            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         }
 
         boolean tryRun(boolean doHardSync) {
