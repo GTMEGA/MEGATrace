@@ -79,6 +79,13 @@ public abstract class MinecraftMixin {
         GPUProfiler.timeSync();
     }
 
+    @Inject(method = "runGameLoop",
+            at = @At("RETURN"),
+            require = 1)
+    private void postGameLoop(CallbackInfo ci) {
+        Tracy.frameMark();
+    }
+
     @WrapOperation(method = "runGameLoop",
                    at = @At(value = "INVOKE",
                             target = "Lnet/minecraft/client/Minecraft;runTick()V"),
@@ -99,7 +106,6 @@ public abstract class MinecraftMixin {
     private void preSwapBuffers(CallbackInfo ci) {
         ScreenshotHandler.instance().queueScreenshot();
         GLAsyncTasks.instance().postRender();
-        Tracy.frameMark();
     }
 
     @ModifyConstant(method = "runGameLoop",
