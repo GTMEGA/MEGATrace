@@ -3,7 +3,7 @@
     .version = "0.0.0",
     .dependencies = .{
         .JNI = .{
-            .url = "https://github.com/FalsePattern/zig-jni/archive/ccb475cb9f759997da0b3ec961915d220eeda671.tar.gz",
+            .url = "git+https://github.com/FalsePattern/zig-jni/?ref=main#ccb475cb9f759997da0b3ec961915d220eeda671",
             .hash = "122046eec9fc7324cb612111c09ce224ddee53a6931bbfa584ebce6e223a62f2cd05",
         },
         .@"zig-tracy" = .{
