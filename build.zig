@@ -21,6 +21,8 @@ pub fn build(b: *std.Build) !void {
         .tracy_no_context_switch = true,
         .tracy_no_callstack = true,
         .tracy_no_crash_handler = true,
+        .tracy_delayed_init = true,
+        .tracy_manual_lifetime = true,
     });
 
     const lib = b.addSharedLibrary(.{

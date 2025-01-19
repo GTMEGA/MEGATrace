@@ -35,7 +35,6 @@ const cpu_zone_error = -1;
 
 const gpu_zone_error = 0;
 
-var tracing_alloc: tracy.TracingAllocator = undefined;
 var arena_alloc: std.heap.ArenaAllocator = undefined;
 var alloc: std.mem.Allocator = undefined;
 
@@ -82,14 +81,15 @@ const GPUTracyLocationData = struct {
 };
 
 pub fn jni_init(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
-    tracing_alloc = tracy.TracingAllocator.init(std.heap.c_allocator);
-    arena_alloc = std.heap.ArenaAllocator.init(tracing_alloc.allocator());
+    tracy.startupProfiler();
+    arena_alloc = std.heap.ArenaAllocator.init(std.heap.c_allocator);
     alloc = arena_alloc.allocator();
     name_intern_pool = intern_pool.StringInternPool.init(alloc);
     source_location_pool = SourceLocationInternPool.init(alloc);
 }
 
 pub fn jni_deinit(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
+    tracy.shutdownProfiler();
     source_location_pool.deinit();
     name_intern_pool.deinit();
     arena_alloc.deinit();
