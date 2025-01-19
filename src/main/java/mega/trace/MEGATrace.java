@@ -24,10 +24,12 @@ package mega.trace;
 
 import lombok.val;
 import mega.trace.natives.Tracy;
+import mega.trace.service.MEGATraceService;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Mod(modid = Tags.MOD_ID,

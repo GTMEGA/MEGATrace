@@ -42,9 +42,11 @@ repositories {
     exclusive(mavenpattern(), "com.falsepattern", "makamys")
     exclusive(mavenCentral(), "it.unimi.dsi")
     exclusive(mega_uploads(), "optifine")
+    exclusive(mega(), "mega")
 }
 
 dependencies {
+    implementation("mega:megatraceservice:1.0.0")
     implementationSplit("com.falsepattern:falsepatternlib-mc1.7.10:1.5.9")
     implementation("it.unimi.dsi:fastutil:8.5.15")
     compileOnly("makamys:neodymium-mc1.7.10:0.4.3-unofficial:dev")
