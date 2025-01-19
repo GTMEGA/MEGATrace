@@ -39,6 +39,7 @@ var arena_alloc: std.heap.ArenaAllocator = undefined;
 var alloc: std.mem.Allocator = undefined;
 
 var name_intern_pool: intern_pool.StringInternPool = undefined;
+var message_intern_pool: intern_pool.StringInternPool = undefined;
 var source_location_pool: SourceLocationInternPool = undefined;
 var gpu_query_id_counter =  std.atomic.Value(u16).init(0);
 
@@ -84,6 +85,7 @@ pub fn jni_init(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
     tracy.startupProfiler();
     arena_alloc = std.heap.ArenaAllocator.init(std.heap.c_allocator);
     alloc = arena_alloc.allocator();
+    message_intern_pool = intern_pool.StringInternPool.init(alloc);
     name_intern_pool = intern_pool.StringInternPool.init(alloc);
     source_location_pool = SourceLocationInternPool.init(alloc);
 }
@@ -92,6 +94,7 @@ pub fn jni_deinit(_: *jni.cEnv, _: jni.jclass) callconv(.c) void {
     tracy.shutdownProfiler();
     source_location_pool.deinit();
     name_intern_pool.deinit();
+    message_intern_pool.deinit();
     arena_alloc.deinit();
 }
 
@@ -117,6 +120,43 @@ pub fn critical_beginZone(jNameL: jni.jint, jName: [*c]jni.jbyte, jColor: jni.ji
     const color: u32 = @bitCast(jColor);
     const zone = beginZone(name, color) catch return cpu_zone_error;
     return @bitCast(zone);
+}
+
+pub fn jni_message(cEnv: *jni.cEnv, _: jni.jclass, jMsg: jni.jbyteArray) callconv(.c) void {
+    const env = jni.JNIEnv.warp(cEnv);
+    const msg = getByteArray(env, jMsg) orelse return;
+    defer freeByteArray(env, jMsg, msg);
+    message(msg) catch {};
+}
+
+pub fn critical_message(jMsgL: jni.jint, jMsg: [*c]jni.jbyte) callconv(.c) void {
+    const msg = critical_getByteArray(jMsgL, jMsg) orelse return;
+    message(msg) catch {};
+}
+
+fn message(msg: [:0]const u8) !void {
+    const interned_msg = try message_intern_pool.intern(msg, msg);
+    tracy.messageRaw(interned_msg);
+}
+
+
+pub fn jni_messageColor(cEnv: *jni.cEnv, _: jni.jclass, jMsg: jni.jbyteArray, jColor: jni.jint) callconv(.c) void {
+    const env = jni.JNIEnv.warp(cEnv);
+    const msg = getByteArray(env, jMsg) orelse return;
+    defer freeByteArray(env, jMsg, msg);
+    const color: u32 = @bitCast(jColor);
+    messageColor(msg, color) catch {};
+}
+
+pub fn critical_messageColor(jMsgL: jni.jint, jMsg: [*c]jni.jbyte, jColor: jni.jint) callconv(.c) void {
+    const msg = critical_getByteArray(jMsgL, jMsg) orelse return;
+    const color: u32 = @bitCast(jColor);
+    messageColor(msg, color) catch {};
+}
+
+fn messageColor(msg: [:0]const u8, color: u32) !void {
+    const interned_msg = try message_intern_pool.intern(msg, msg);
+    tracy.messageColorRaw(interned_msg, color);
 }
 
 fn beginZone(name: [:0]const u8, color: u32) !u64 {

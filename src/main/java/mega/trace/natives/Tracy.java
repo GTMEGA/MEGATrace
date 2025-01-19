@@ -33,6 +33,10 @@ public class Tracy {
 
     public static native void frameMark();
 
+    public static native void message(byte[] msg);
+
+    public static native void messageColor(byte[] msg, int color);
+
     public static native long beginZone(byte[] name, int color);
 
     public static native void endZone(long zone);
