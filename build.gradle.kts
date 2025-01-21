@@ -46,7 +46,7 @@ repositories {
 }
 
 dependencies {
-    implementation("mega:megatraceservice:1.0.0")
+    implementation("mega:megatraceservice:1.2.0")
     implementationSplit("com.falsepattern:falsepatternlib-mc1.7.10:1.5.9")
     implementation("it.unimi.dsi:fastutil:8.5.15")
     compileOnly("makamys:neodymium-mc1.7.10:0.4.3-unofficial:dev")

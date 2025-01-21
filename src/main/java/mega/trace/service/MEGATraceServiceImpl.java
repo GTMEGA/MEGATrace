@@ -23,13 +23,37 @@
 package mega.trace.service;
 
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import mega.trace.natives.Tracy;
+
+import net.minecraft.profiler.Profiler;
+
+import java.nio.charset.StandardCharsets;
 
 @NoArgsConstructor
 public final class MEGATraceServiceImpl implements MEGATraceService {
     @Override
+    public void markProfiler(@NonNull Object profiler, @NonNull String prefix, int color) {
+        if (!(profiler instanceof Profiler mcProfiler)) {
+            throw new IllegalArgumentException("Expected instance of :" + Profiler.class.getName() + " got: " + profiler.getClass().getName());
+        }
+        // TODO: Custom colors?
+        mcProfiler.getProfilingData("__MEGATRACE__:" + prefix);
+    }
+
+    @Override
+    public void message(String msg) {
+        message(msg.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
     public void message(byte[] msg) {
         Tracy.message(msg);
+    }
+
+    @Override
+    public void messageColor(String msg, int color) {
+        messageColor(msg.getBytes(StandardCharsets.UTF_8), color);
     }
 
     @Override
