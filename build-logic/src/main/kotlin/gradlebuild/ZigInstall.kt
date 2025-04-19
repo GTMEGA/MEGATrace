@@ -41,7 +41,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.net.URL
+import java.net.URI
 import javax.inject.Inject
 
 abstract class ZigInstall @Inject constructor(@Inject val exec: ExecOperations) : DefaultTask() {
@@ -103,7 +103,7 @@ abstract class ZigInstall @Inject constructor(@Inject val exec: ExecOperations) 
     }
 
     fun downloadFile(url: String, destination: File) {
-        URL(url).openStream().use { input ->
+        URI(url).toURL().openStream().use { input ->
             FileOutputStream(destination).use { output ->
                 input.copyTo(output)
             }
@@ -176,7 +176,8 @@ abstract class ZigInstall @Inject constructor(@Inject val exec: ExecOperations) 
     private fun arch(): String {
         val arch = System.getProperty("os.arch").lowercase()
         return when {
-            arch.contains("x86_64") || arch.contains("amd64") -> "x86_64"
+            arch.contains("x86_64") -> "x86_64"
+            arch.contains("amd64") -> "x86_64"
             arch.contains("aarch64") -> "aarch64"
             else -> error("Unsupported architecture: $arch")
         }

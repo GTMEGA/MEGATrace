@@ -49,6 +49,9 @@ abstract class ZigBuild @Inject constructor(@Inject val exec: ExecOperations) : 
     @get:Internal
     abstract val executablePath: Property<String>
 
+    @get:Input
+    abstract val zigVersion: Property<String>
+
     @get:Internal
     abstract val workingDirectory: DirectoryProperty
 
@@ -73,6 +76,10 @@ abstract class ZigBuild @Inject constructor(@Inject val exec: ExecOperations) : 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sources: ConfigurableFileCollection
 
+    @get:Optional
+    @get:Input
+    abstract val steps: ListProperty<String>
+
     @get:Input
     abstract val target: Property<String>
 
@@ -88,7 +95,12 @@ abstract class ZigBuild @Inject constructor(@Inject val exec: ExecOperations) : 
     fun execute() {
         exec.exec {
             executable = executablePath.get()
-            args("build", "install")
+            args("build")
+            if (steps.isPresent) {
+                args(steps.get())
+            } else {
+                args("install")
+            }
             if (outputDirectory.isPresent) {
                 args("--prefix", outputDirectory.get().asFile.absolutePath)
             }
