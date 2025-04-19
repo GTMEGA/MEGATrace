@@ -10,11 +10,11 @@ pub fn build(b: *std.Build) !void {
     opt.add([]const u8, "mod_version", "Mod Version", "0.0.0");
     opt.add([]const u8, "root_pkg", "Root package of the mod", "com.example");
 
-    const JNI = b.dependency("JNI", .{
+    const JNI = b.dependency("jni", .{
         .target = target,
         .optimize = optimize,
     });
-    const tracy = b.dependency("zig-tracy", .{
+    const tracy = b.dependency("tracy", .{
         .target = target,
         .optimize = optimize,
         .tracy_enable = true,

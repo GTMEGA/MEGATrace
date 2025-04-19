@@ -136,7 +136,7 @@ pub fn critical_message(jMsgL: jni.jint, jMsg: [*c]jni.jbyte) callconv(.c) void 
 
 fn message(msg: [:0]const u8) !void {
     const interned_msg = try message_intern_pool.intern(msg, msg);
-    tracy.messageRaw(interned_msg);
+    tracy.messageAlloc(interned_msg);
 }
 
 
@@ -156,7 +156,7 @@ pub fn critical_messageColor(jMsgL: jni.jint, jMsg: [*c]jni.jbyte, jColor: jni.j
 
 fn messageColor(msg: [:0]const u8, color: u32) !void {
     const interned_msg = try message_intern_pool.intern(msg, msg);
-    tracy.messageColorRaw(interned_msg, color);
+    tracy.messageColorAlloc(interned_msg, color);
 }
 
 fn beginZone(name: [:0]const u8, color: u32) !u64 {

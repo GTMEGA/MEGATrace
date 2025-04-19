@@ -1,7 +1,7 @@
 import gradlebuild.ZigBuild
 
 plugins {
-    id("fpgradle-minecraft") version("0.10.0")
+    id("fpgradle-minecraft") version("0.12.0")
     id("gradlebuild.zig")
 }
 
@@ -56,7 +56,7 @@ dependencies {
 val zigOutDir = layout.buildDirectory.dir("zig")
 
 zig {
-    zigVersion = "0.14.0-dev.2649+77273103a"
+    zigVersion = "0.14.0"
     outputDir = zigOutDir
     targets {
         create("x86_64-linux-gnu")
