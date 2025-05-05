@@ -87,48 +87,6 @@ targets.forEach { target ->
     }
 }
 
-//zig {
-//    zigVersion = "0.14.0"
-//    outputDir = zigOutDir
-//    targets {
-//        create("x86_64-linux-gnu")
-//        create("aarch64-linux-gnu")
-//        create("x86_64-windows-gnu")
-////        create("aarch64-windows-gnu") TODO tracy is unhappy on this triple
-////        create("x86_64-macos-none") TODO MacOS
-//    }.configureEach {
-//        optimizer = "ReleaseSmall"
-//        sources.from(layout.projectDirectory.dir("src/main/zig"))
-//        sources.from(layout.projectDirectory.dir("build.zig"))
-//        sources.from(layout.projectDirectory.dir("build.zig.zon"))
-//    }
-//}
-//tasks.withType<ZigBuild>().all {
-//    val zigBuild = this
-//    val isWindows = zigBuild.target.map { it.contains("windows") }
-//    val zigClean = tasks.register<Delete>("zigClean${zigBuild.name.removePrefix("zigBuild")}")
-//    zigBuild.dependsOn(zigClean)
-//
-//    val mod = minecraft_fp.mod;
-//    extraArgs.add(mod.modid.map { "-Dmod_id=$it" })
-//    extraArgs.add(mod.name.map { "-Dmod_name=$it" })
-//    extraArgs.add(mod.version.map { "-Dmod_version=$it" })
-//    extraArgs.add(mod.rootPkg.map { "-Droot_pkg=$it" })
-////    extraArgs.add("-Dstrip")
-//
-//    zigClean.configure {
-//        group = "zig"
-//        delete(zigBuild.outputDirectory)
-//    }
-//    tasks.named<ProcessResources>("processResources") {
-//        into("/natives") {
-//            from(zigBuild.outputDirectory.dir(isWindows.map { if (it) "bin" else "lib" }))
-//            include("*.dll", "*.so")
-//            rename("(\\w+)\\.(dll|so)", "$1-${zigBuild.target.get()}.$2")
-//        }
-//    }
-//}
-
 repositories {
     exclusive(mavenpattern(), "com.falsepattern", "makamys")
     exclusive(mavenCentral(), "it.unimi.dsi")
