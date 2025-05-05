@@ -13,5 +13,9 @@
             .hash = "jni-0.0.1-qf3mHEoJBADgTJirCPl6I65kKz6-PBwsV7PgN_EX6AQy",
         },
     },
-    .paths = .{""},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src/main/zig"
+    },
 }
