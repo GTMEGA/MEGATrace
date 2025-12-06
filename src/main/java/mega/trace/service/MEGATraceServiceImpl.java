@@ -42,6 +42,11 @@ public final class MEGATraceServiceImpl implements MEGATraceService {
     }
 
     @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    @Override
     public void message(String msg) {
         message(msg.getBytes(StandardCharsets.UTF_8));
     }
